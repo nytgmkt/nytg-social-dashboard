@@ -139,9 +139,10 @@ tr:hover td{background:#FAFAF7}
 .funnel-cnt{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#fff;white-space:nowrap}
 .funnel-pct{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:38px;text-align:right}
 /* ── PANEL UPLOAD BAR ── */
-.panel-upload-bar{display:flex;align-items:center;gap:10px;padding:0 0 18px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:20px}
+.panel-upload-bar{display:flex;align-items:center;gap:10px;padding:0 0 14px;flex-wrap:wrap}
 .pub-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 .pub-tag{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:8px}
+.panel-year-bar{display:flex;align-items:center;gap:8px;padding:10px 0 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px}
 footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);font-family:'DM Mono',monospace}
 </style>
 </head>
@@ -290,6 +291,12 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleLeads()">▶ Load Sample</button>
     <span class="pub-tag" id="leadsDataTag"></span>
   </div>
+  <div class="panel-year-bar">
+    <span class="period-label">Year</span>
+    <span class="pchip active" id="leadsYtab-all"  onclick="setLeadsYear('all')">All</span>
+    <span class="pchip"        id="leadsYtab-2025" onclick="setLeadsYear('2025')">2025</span>
+    <span class="pchip"        id="leadsYtab-2026" onclick="setLeadsYear('2026')">2026</span>
+  </div>
   <div class="kpi-strip" id="leadsKPIs"></div>
   <div class="grid-2">
     <div class="card">
@@ -327,6 +334,12 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleAds()">▶ Load Sample</button>
     <span class="pub-tag" id="adsDataTag"></span>
   </div>
+  <div class="panel-year-bar">
+    <span class="period-label">Year</span>
+    <span class="pchip active" id="adsYtab-all"  onclick="setAdsYear('all')">All</span>
+    <span class="pchip"        id="adsYtab-2025" onclick="setAdsYear('2025')">2025</span>
+    <span class="pchip"        id="adsYtab-2026" onclick="setAdsYear('2026')">2026</span>
+  </div>
   <div class="kpi-strip" id="adsKPIs"></div>
   <div class="grid-2">
     <div class="card"><div class="card-title">Spend by Ad Creative (THB)</div><canvas id="adsSpendChart" height="320"></canvas></div>
@@ -362,6 +375,8 @@ let activeYear='all';
 let activeBrand='nytg';
 let LEADS_DATA=[];
 let ADS_DATA=[];
+let activeLeadsYear='all';
+let activeAdsYear='all';
 let charts={};
 
 const EXCLUDE_CATS=['Greeting','Other'];
@@ -397,6 +412,8 @@ function initBrandData(){
   const posts=LS.load('posts');
   LEADS_DATA=LS.load('leads')||[];
   ADS_DATA=LS.load('ads')||[];
+  activeLeadsYear='all';
+  activeAdsYear='all';
   if(posts&&posts.length>0){
     DATA=posts;activePeriod='all';
     updateBadge();showDashboard();renderAll();
@@ -600,6 +617,8 @@ function setTag(msg){document.getElementById('footerNote').textContent='NYTG Das
 
 // ═══════════ YEAR FILTER ═══════════
 function setYear(y){activeYear=y;activePeriod='all';['all','2025','2026'].forEach(id=>document.getElementById('ytab-'+id).classList.toggle('active',id===y));renderAll();}
+function setLeadsYear(y){activeLeadsYear=y;renderLeads();}
+function setAdsYear(y){activeAdsYear=y;renderAds();}
 function yearFiltered(data){if(activeYear==='all')return data;return data.filter(d=>d.date&&d.date.startsWith(activeYear));}
 
 // ═══════════ PERIOD FILTER ═══════════
@@ -741,10 +760,17 @@ function renderBrand(){
 
 // ═══════════ LEADS & CRM ═══════════
 function renderLeads(){
+  // sync year tab UI
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('leadsYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadsYear);});
+
   const brandFilter=activeBrand==='nytg'?'FB-NYTG':'FB-NIC';
-  const d=LEADS_DATA.filter(l=>!l.channel||l.channel===brandFilter||l.channel==='');
-  
-  document.getElementById('leadsDataTag').textContent=`${d.length} leads loaded`;
+  const byBrand=LEADS_DATA.filter(l=>!l.channel||l.channel===brandFilter||l.channel==='');
+  const d=activeLeadsYear==='all'?byBrand:byBrand.filter(l=>{
+    const parts=l.date?l.date.split('/'):[]; return parts.length===3&&parts[2]===activeLeadsYear;
+  });
+
+  const yearLabel=activeLeadsYear==='all'?'':` · ${activeLeadsYear}`;
+  document.getElementById('leadsDataTag').textContent=`${d.length} leads loaded${yearLabel}`;
   
   const total=d.length;
   const qualify=d.filter(l=>l.stage==='Qualify Lead').length;
@@ -828,9 +854,10 @@ function renderLeads(){
     charts.leadsMonthChart=new Chart(document.getElementById('leadsMonthChart'),{type:'bar',data:{labels:sortedMonths,datasets:[{data:sortedMonths.map(m=>monthMap[m]),backgroundColor:'rgba(28,89,168,.65)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,maxRotation:35}}}}});
   }
 
-  // Channel chart (NYTG vs NIC)
+  // Channel chart (NYTG vs NIC) — use year-filtered but brand-unfiltered data for full split view
+  const chBase=activeLeadsYear==='all'?LEADS_DATA:LEADS_DATA.filter(l=>{const p=l.date?l.date.split('/'):[]; return p.length===3&&p[2]===activeLeadsYear;});
   const chMap={};
-  LEADS_DATA.forEach(l=>{if(l.channel)chMap[l.channel]=(chMap[l.channel]||0)+1;});
+  chBase.forEach(l=>{if(l.channel)chMap[l.channel]=(chMap[l.channel]||0)+1;});
   const chData=Object.entries(chMap).sort((a,b)=>b[1]-a[1]);
   destroyChart('leadsChannelChart');
   if(chData.length>0){
@@ -879,9 +906,15 @@ function parseLeadsDate(dateStr){
 
 // ═══════════ AD SPENDING ═══════════
 function renderAds(){
-  const d=ADS_DATA;
-  if(!d.length){document.getElementById('adsDataTag').textContent='ยังไม่มีข้อมูล';return;}
-  document.getElementById('adsDataTag').textContent=`${d.length} ads loaded`;
+  // sync year tab UI
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('adsYtab-'+y);if(el)el.classList.toggle('active',y===activeAdsYear);});
+
+  if(!ADS_DATA.length){document.getElementById('adsDataTag').textContent='ยังไม่มีข้อมูล';return;}
+  const d=activeAdsYear==='all'?ADS_DATA:ADS_DATA.filter(r=>{
+    const yr=r.start?r.start.split('-')[0]:''; return yr===activeAdsYear;
+  });
+  const yearLabel=activeAdsYear==='all'?'':` · ${activeAdsYear}`;
+  document.getElementById('adsDataTag').textContent=`${d.length} ads loaded${yearLabel}`;
 
   const totalSpend=d.reduce((s,r)=>s+r.spend,0);
   const totalReach=d.reduce((s,r)=>s+r.reach,0);
