@@ -152,6 +152,8 @@ tr:hover td{background:#FAFAF7}
 #editorTable th{position:sticky;top:88px;z-index:2}
 .editor-hint{font-size:11px;color:var(--muted);font-style:italic}
 footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);font-family:'DM Mono',monospace}
+#page-leads.leads-empty .panel-year-bar,#page-leads.leads-empty .kpi-strip,#page-leads.leads-empty .grid-2,#page-leads.leads-empty > .card{display:none}
+#page-ads.ads-empty .panel-year-bar,#page-ads.ads-empty .kpi-strip,#page-ads.ads-empty .grid-2,#page-ads.ads-empty > .card{display:none}
 </style>
 </head>
 <body>
@@ -182,10 +184,12 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <button class="upload-btn btn-fill" onclick="loadSample()">▶ Sample Data</button>
   </div>
 </nav>
-<input type="file" id="csvLoadNew"   accept=".csv"       onchange="loadNewDataCSV(this)">
-<input type="file" id="csvAddMonth"  accept=".csv"       onchange="addMonthCSV(this)">
-<input type="file" id="leadsFileIn"  accept=".csv"       onchange="loadLeadsCSV(this)">
-<input type="file" id="adsFileIn"    accept=".xlsx,.xls" onchange="loadAdsExcel(this)">
+<input type="file" id="csvLoadNew"       accept=".csv"       onchange="loadNewDataCSV(this)">
+<input type="file" id="csvAddMonth"   accept=".csv"       onchange="addMonthCSV(this)">
+<input type="file" id="leadsFileIn"   accept=".csv"       onchange="loadNewLeadsCSV(this)">
+<input type="file" id="leadsAddMonthIn" accept=".csv"     onchange="addMonthLeadsCSV(this)">
+<input type="file" id="adsFileIn"     accept=".xlsx,.xls" onchange="loadNewAdsExcel(this)">
+<input type="file" id="adsAddMonthIn" accept=".xlsx,.xls" onchange="addMonthAdsExcel(this)">
 
 <!-- YEAR TABS -->
 <div class="year-bar" id="yearBar">
@@ -296,9 +300,20 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   <div style="height:16px"></div>
   <div class="panel-upload-bar">
     <span class="pub-label">Leads &amp; CRM</span>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadsFileIn').click()">📋 Upload Leads CSV</button>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
     <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleLeads()">▶ Load Sample</button>
     <span class="pub-tag" id="leadsDataTag"></span>
+  </div>
+  <div id="leadsEmpty" class="empty-state" style="display:none">
+    <div class="empty-state-icon">📋</div>
+    <div class="empty-state-title">ยังไม่มีข้อมูล Leads &amp; CRM</div>
+    <div class="empty-state-sub">กรุณาอัปโหลดไฟล์ CSV ของ Leads หรือกด Load Sample เพื่อดูตัวอย่าง</div>
+    <div class="empty-state-btns">
+      <button class="es-btn es-btn-fill" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
+      <button class="es-btn es-btn-out"  onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
+      <button class="es-btn es-btn-out"  onclick="loadSampleLeads()">▶ Load Sample</button>
+    </div>
   </div>
   <div class="panel-year-bar">
     <span class="period-label">Year</span>
@@ -339,9 +354,20 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   <div style="height:16px"></div>
   <div class="panel-upload-bar">
     <span class="pub-label">Ad Spending</span>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsFileIn').click()">📊 Upload Ads Excel</button>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsFileIn').click()">🔄 Load New</button>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsAddMonthIn').click()">➕ Add Month</button>
     <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleAds()">▶ Load Sample</button>
     <span class="pub-tag" id="adsDataTag"></span>
+  </div>
+  <div id="adsEmpty" class="empty-state" style="display:none">
+    <div class="empty-state-icon">💰</div>
+    <div class="empty-state-title">ยังไม่มีข้อมูล Ad Spending</div>
+    <div class="empty-state-sub">กรุณาอัปโหลดไฟล์ Excel ของ Ads หรือกด Load Sample เพื่อดูตัวอย่าง</div>
+    <div class="empty-state-btns">
+      <button class="es-btn es-btn-fill" onclick="document.getElementById('adsFileIn').click()">🔄 Load New</button>
+      <button class="es-btn es-btn-out"  onclick="document.getElementById('adsAddMonthIn').click()">➕ Add Month</button>
+      <button class="es-btn es-btn-out"  onclick="loadSampleAds()">▶ Load Sample</button>
+    </div>
   </div>
   <div class="panel-year-bar">
     <span class="period-label">Year</span>
@@ -380,27 +406,19 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto">
         <button class="upload-btn btn-outline" style="font-size:11px" onclick="editorAddRow()">➕ Add Row</button>
         <button class="upload-btn btn-outline" style="font-size:11px;border-color:var(--red);color:var(--red)" onclick="editorDeleteSelected()">🗑️ Delete Selected</button>
+        <button class="upload-btn btn-outline" style="font-size:11px" onclick="editorExportCSV()">📥 Export CSV</button>
         <button class="upload-btn btn-fill" onclick="editorSaveChanges()">💾 Save Changes</button>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:6px;padding:0 0 14px;flex-wrap:wrap">
+      <span class="pchip active" id="editorTab-posts"  onclick="editorSetType('posts')">📊 Posts</span>
+      <span class="pchip"        id="editorTab-leads"  onclick="editorSetType('leads')">📋 Leads</span>
+      <span class="pchip"        id="editorTab-ads"    onclick="editorSetType('ads')">💰 Ads</span>
+      <span class="pchip"        id="editorTab-notes"  onclick="editorSetType('notes')">📌 Notes</span>
+    </div>
     <div class="tbl-wrap">
       <table id="editorTable">
-        <thead>
-          <tr>
-            <th style="width:32px;text-align:center"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)" style="cursor:pointer;width:14px;height:14px"></th>
-            <th>Date</th>
-            <th>Category<br><span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:9px">cat1 / cat2 / cat3</span></th>
-            <th>Post Type</th>
-            <th>Brand</th>
-            <th>Reach</th>
-            <th>Views</th>
-            <th>Interactions</th>
-            <th>%Reach</th>
-            <th>%Eng</th>
-            <th>Leads</th>
-            <th style="min-width:200px">Permalink</th>
-          </tr>
-        </thead>
+        <thead id="editorThead"></thead>
         <tbody id="editorTbody"></tbody>
       </table>
     </div>
@@ -424,8 +442,10 @@ let activeYear='all';
 let activeBrand='nytg';
 let LEADS_DATA=[];
 let ADS_DATA=[];
+let NOTES_DATA={};
 let activeLeadsYear='all';
 let activeAdsYear='all';
+let editorType='posts';
 let charts={};
 
 const EXCLUDE_CATS=['Greeting','Other'];
@@ -461,16 +481,18 @@ function initBrandData(){
   const posts=LS.load('posts');
   LEADS_DATA=LS.load('leads')||[];
   ADS_DATA=LS.load('ads')||[];
+  NOTES_DATA=LS.load('notes')||{};
   activeLeadsYear='all';
   activeAdsYear='all';
+  editorType='posts';
   if(posts&&posts.length>0){
     DATA=posts;activePeriod='all';
     updateBadge();showDashboard();renderAll();
   }else{
     DATA=[];updateBadge();showEmptyState();
   }
-  if(LEADS_DATA.length>0)renderLeads();
-  if(ADS_DATA.length>0)renderAds();
+  renderLeads();
+  renderAds();
   renderEditor();
 }
 
@@ -497,7 +519,15 @@ function loadNewDataCSV(input){
   const reader=new FileReader();
   reader.onload=e=>{
     try{
-      const rows=parseCSV(e.target.result);
+      const text=e.target.result;
+      const headerEnd=text.indexOf('\n');
+      const sep=text.substring(0,headerEnd).split('\t').length>text.substring(0,headerEnd).split(',').length?'\t':',';
+      const hRows=parseCSVRows(text,sep);
+      if(hRows.length<1){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+      const headers=hRows[0].map(h=>h.trim());
+      const missing=validateCSVHeaders(headers,['Permalink','Publish time','Post type'],'Posts');
+      if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
+      const rows=parseCSV(text);
       if(!rows.length){alert('ไม่พบข้อมูลในไฟล์');return;}
       LS.remove('posts');
       DATA=rows;activePeriod='all';
@@ -514,7 +544,15 @@ function addMonthCSV(input){
   const reader=new FileReader();
   reader.onload=e=>{
     try{
-      const newRows=parseCSV(e.target.result);
+      const text=e.target.result;
+      const headerEnd=text.indexOf('\n');
+      const sep=text.substring(0,headerEnd).split('\t').length>text.substring(0,headerEnd).split(',').length?'\t':',';
+      const hRows=parseCSVRows(text,sep);
+      if(hRows.length<1){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+      const headers=hRows[0].map(h=>h.trim());
+      const missing=validateCSVHeaders(headers,['Permalink','Publish time','Post type'],'Posts');
+      if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
+      const newRows=parseCSV(text);
       if(!newRows.length){alert('ไม่พบข้อมูลในไฟล์');return;}
       const existing=LS.load('posts')||DATA;
       const existLinks=new Set(existing.map(d=>d.link).filter(Boolean));
@@ -529,47 +567,125 @@ function addMonthCSV(input){
   reader.readAsText(file,'utf-8');
 }
 
-function loadLeadsCSV(input){
+// ═══════════ VALIDATION ═══════════
+function validateCSVHeaders(headers,required,label){
+  return required.filter(r=>!headers.includes(r));
+}
+
+// ═══════════ LEADS UPLOAD HANDLERS ═══════════
+function loadNewLeadsCSV(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
-    LEADS_DATA=parseLeadsCSV(e.target.result);
+    const text=e.target.result;
+    const headerEnd=text.indexOf('\n');
+    const sep=text.substring(0,headerEnd).split('\t').length>text.substring(0,headerEnd).split(',').length?'\t':',';
+    const rows=parseCSVRows(text,sep);
+    if(rows.length<2){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const headers=rows[0].map(h=>h.trim());
+    const missing=validateCSVHeaders(headers,['Date','Customer / Account Name','Channel','Stage'],'Leads');
+    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
+    LS.remove('leads');
+    LEADS_DATA=parseLeadsCSV(text);
     LS.save('leads',LEADS_DATA);
     renderLeads();input.value='';
   };
   reader.readAsText(file,'utf-8');
 }
 
-function loadAdsExcel(input){
+function addMonthLeadsCSV(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const text=e.target.result;
+    const headerEnd=text.indexOf('\n');
+    const sep=text.substring(0,headerEnd).split('\t').length>text.substring(0,headerEnd).split(',').length?'\t':',';
+    const rows=parseCSVRows(text,sep);
+    if(rows.length<2){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const headers=rows[0].map(h=>h.trim());
+    const missing=validateCSVHeaders(headers,['Date','Customer / Account Name','Channel','Stage'],'Leads');
+    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
+    const newRows=parseLeadsCSV(text);
+    const existing=LS.load('leads')||LEADS_DATA;
+    const existKeys=new Set(existing.map(l=>`${l.customer}|${l.date}|${l.channel}`));
+    const added=newRows.filter(r=>`${r.customer}|${r.date}|${r.channel}`&&!existKeys.has(`${r.customer}|${r.date}|${r.channel}`));
+    LEADS_DATA=[...existing,...added];
+    LS.save('leads',LEADS_DATA);
+    renderLeads();
+    alert(`เพิ่ม ${added.length} leads ใหม่`);
+    input.value='';
+  };
+  reader.readAsText(file,'utf-8');
+}
+
+function parseAdsRow(r){
+  return{
+    ad_name:r['Ad name']||'',
+    delivery:r['Ad delivery']||'',
+    results:parseFloat(r['Results'])||0,
+    result_type:String(r['Result indicator']||'').includes('messaging')?'messaging':'reach',
+    cost_per_result:parseFloat(r['Cost per results'])||0,
+    spend:parseFloat(r['Amount spent (THB)'])||0,
+    impressions:parseInt(r['Impressions'])||0,
+    reach:parseInt(r['Reach'])||0,
+    msg_contacts:parseInt(r['Total messaging contacts'])||0,
+    new_contacts:parseInt(r['New messaging contacts'])||0,
+    views:parseInt(r['Views'])||0,
+    clicks:parseInt(r['Clicks (all)'])||0,
+    post_eng:parseInt(r['Post engagements'])||0,
+    ad_set:r['Ad set name']||'',
+    cpm:parseFloat(r['CPM (cost per 1,000 impressions) (THB)'])||0,
+    cpc:parseFloat(r['CPC (cost per link click) (THB)'])||0,
+  };
+}
+
+// ═══════════ ADS UPLOAD HANDLERS ═══════════
+function loadNewAdsExcel(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=e=>{
     const wb=XLSX.read(e.target.result,{type:'array'});
     const ws=wb.Sheets[wb.SheetNames[0]];
     const raw=XLSX.utils.sheet_to_json(ws);
-    ADS_DATA=raw.map(r=>({
-      ad_name:r['Ad name']||'',
-      delivery:r['Ad delivery']||'',
-      results:parseFloat(r['Results'])||0,
-      result_type:String(r['Result indicator']||'').includes('messaging')?'messaging':'reach',
-      cost_per_result:parseFloat(r['Cost per results'])||0,
-      spend:parseFloat(r['Amount spent (THB)'])||0,
-      impressions:parseInt(r['Impressions'])||0,
-      reach:parseInt(r['Reach'])||0,
-      msg_contacts:parseInt(r['Total messaging contacts'])||0,
-      new_contacts:parseInt(r['New messaging contacts'])||0,
-      views:parseInt(r['Views'])||0,
-      clicks:parseInt(r['Clicks (all)'])||0,
-      post_eng:parseInt(r['Post engagements'])||0,
-      ad_set:r['Ad set name']||'',
-      cpm:parseFloat(r['CPM (cost per 1,000 impressions) (THB)'])||0,
-      cpc:parseFloat(r['CPC (cost per link click) (THB)'])||0,
-    }));
+    if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const keys=Object.keys(raw[0]);
+    const missing=validateCSVHeaders(keys,['Ad name','Amount spent (THB)','Reach'],'Ads');
+    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
+    LS.remove('ads');
+    ADS_DATA=raw.map(parseAdsRow);
     LS.save('ads',ADS_DATA);
     renderAds();input.value='';
   };
   reader.readAsArrayBuffer(file);
 }
+
+function addMonthAdsExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws);
+    if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const keys=Object.keys(raw[0]);
+    const missing=validateCSVHeaders(keys,['Ad name','Amount spent (THB)','Reach'],'Ads');
+    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
+    const newRows=raw.map(parseAdsRow);
+    const existing=LS.load('ads')||ADS_DATA;
+    const existKeys=new Set(existing.map(r=>`${r.ad_name}|${r.start||''}|${r.end||''}`));
+    const added=newRows.filter(r=>!existKeys.has(`${r.ad_name}|${r.start||''}|${r.end||''}`));
+    ADS_DATA=[...existing,...added];
+    LS.save('ads',ADS_DATA);
+    renderAds();
+    alert(`เพิ่ม ${added.length} ads ใหม่`);
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Aliases for backward compat
+function loadLeadsCSV(input){loadNewLeadsCSV(input);}
+function loadAdsExcel(input){loadNewAdsExcel(input);}
 
 function loadSampleLeads(){LEADS_DATA=SAMPLE_LEADS;LS.save('leads',LEADS_DATA);renderLeads();}
 function loadSampleAds(){ADS_DATA=SAMPLE_ADS;LS.save('ads',ADS_DATA);renderAds();}
@@ -656,9 +772,9 @@ function parseLeadsCSV(text){
 
 // ═══════════ SAMPLE DATA LOAD ═══════════
 function loadSample(){
-  DATA=SAMPLE;LEADS_DATA=SAMPLE_LEADS;ADS_DATA=SAMPLE_ADS;
+  DATA=SAMPLE;LEADS_DATA=SAMPLE_LEADS;ADS_DATA=SAMPLE_ADS;NOTES_DATA={};
   activePeriod='all';
-  LS.save('posts',DATA);LS.save('leads',LEADS_DATA);LS.save('ads',ADS_DATA);
+  LS.save('posts',DATA);LS.save('leads',LEADS_DATA);LS.save('ads',ADS_DATA);LS.save('notes',NOTES_DATA);
   updateBadge();showDashboard();
   setTag('✅ Sample Data · Jan 2025 – Apr 2026');
   renderAll();renderLeads();renderAds();renderEditor();
@@ -692,7 +808,8 @@ function showPage(p){
     showEmptyState();return;
   }
   document.getElementById('emptyState').style.display='none';
-  if(postsTabs.includes(p)){document.getElementById('yearBar').style.display='';document.getElementById('periodBar').style.display='';}
+  const showBars=postsTabs.includes(p)&&p!=='exec';
+  if(showBars){document.getElementById('yearBar').style.display='';document.getElementById('periodBar').style.display='';}
   else{document.getElementById('yearBar').style.display='none';document.getElementById('periodBar').style.display='none';}
   document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
@@ -706,7 +823,7 @@ const SAMPLE_ADS=[{"start":"2026-01-01","end":"2026-05-13","ad_name":"Lightweigh
 
 // ═══════════ EXEC ═══════════
 function renderExec(){
-  const d=filtered();
+  const d=DATA;
   const catC={};
   d.forEach(p=>[p.cat1,p.cat2,p.cat3].forEach(c=>{if(c&&!EXCLUDE_CATS.includes(c))catC[c]=(catC[c]||0)+1;}));
   const totalTags=Object.values(catC).reduce((a,b)=>a+b,0);
@@ -718,7 +835,7 @@ function renderExec(){
   d.forEach(p=>{if(p.month in monthPosts)monthPosts[p.month]++;});
   const mUsed=MONTH_ORDER.filter(m=>monthPosts[m]>0);
   destroyChart('execMonthChart');
-  charts.execMonthChart=new Chart(document.getElementById('execMonthChart'),{type:'bar',data:{labels:mUsed,datasets:[{data:mUsed.map(m=>monthPosts[m]),backgroundColor:mUsed.map(m=>m.includes('2025')?'rgba(0,166,147,.65)':'rgba(28,89,168,.65)'),borderRadius:4,borderSkipped:false}]},options:{...CD,responsive:true,plugins:{...CD.plugins,legend:{display:false}}}});
+  charts.execMonthChart=new Chart(document.getElementById('execMonthChart'),{type:'bar',data:{labels:mUsed,datasets:[{data:mUsed.map(m=>monthPosts[m]),backgroundColor:mUsed.map(m=>m.includes('2025')?'rgba(0,166,147,.65)':'rgba(28,89,168,.65)'),borderRadius:4,borderSkipped:false}]},options:{...CD,responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{afterBody:ctx=>{const n=NOTES_DATA[ctx[0]?.label];return n?['','📌 '+n]:[];}}}}}});
   const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),sub:'Unique viewers',dark:true},{label:'Leads',val:fmt(sum(d,'leads')),sub:'Lead Count',dark:true},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:true},{label:'Interactions',val:fmt(sum(d,'interactions')),sub:'React+Comment+Share',dark:true},{label:'Avg %Reach',val:avg(d,'pct_reach').toFixed(1)+'%',sub:'Viewers÷Impressions',dark:false},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',sub:'Per post avg',dark:false},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:false},{label:'Posts',val:d.length,sub:'Total posts',dark:false}];
   document.getElementById('execKPIs').innerHTML=kpis.map(k=>`<div class="kpi2 ${k.dark?'dark':'light'}"><div class="kpi2-label">${k.label}</div><div class="kpi2-val">${k.val}</div><div class="kpi2-sub">${k.sub}</div></div>`).join('');
 }
@@ -733,7 +850,7 @@ function renderContent(){
   const mR={},mN={};
   mUsed.forEach(m=>{const mp=d.filter(p=>p.month===m);mR[m]=sum(mp,'reach');mN[m]=sum(mp,'interactions');});
   destroyChart('trendChart');
-  charts.trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:mUsed,datasets:[{label:'Reach',data:mUsed.map(m=>mR[m]),borderColor:'#00A693',backgroundColor:'rgba(0,166,147,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true,yAxisID:'y'},{label:'Interactions',data:mUsed.map(m=>mN[m]),borderColor:'#C07D10',borderWidth:2,pointRadius:4,tension:.3,yAxisID:'y1'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}}},scales:{y:{ticks:{callback:v=>fmt(v),color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},y1:{position:'right',ticks:{callback:v=>fmt(v),color:'#C07D10',font:{size:10}},grid:{display:false}},x:{ticks:{color:'#9B9690',font:{size:10}},grid:{display:false}}}}});
+  charts.trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:mUsed,datasets:[{label:'Reach',data:mUsed.map(m=>mR[m]),borderColor:'#00A693',backgroundColor:'rgba(0,166,147,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true,yAxisID:'y'},{label:'Interactions',data:mUsed.map(m=>mN[m]),borderColor:'#C07D10',borderWidth:2,pointRadius:4,tension:.3,yAxisID:'y1'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}},tooltip:{callbacks:{afterBody:ctx=>{const n=NOTES_DATA[ctx[0]?.label];return n?['','📌 '+n]:[];}}}},scales:{y:{ticks:{callback:v=>fmt(v),color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},y1:{position:'right',ticks:{callback:v=>fmt(v),color:'#C07D10',font:{size:10}},grid:{display:false}},x:{ticks:{color:'#9B9690',font:{size:10}},grid:{display:false}}}}});
   const catPct={};
   noGreet.forEach(p=>[p.cat1,p.cat2,p.cat3].forEach(c=>{if(!c||EXCLUDE_CATS.includes(c))return;if(!catPct[c])catPct[c]=[];catPct[c].push(p.pct_reach);}));
   const catRanked=Object.entries(catPct).map(([k,v])=>({cat:k,pct:v.reduce((a,b)=>a+b,0)/v.length})).sort((a,b)=>b.pct-a.pct);
@@ -820,9 +937,13 @@ function renderLeads(){
     const parts=l.date?l.date.split('/'):[]; return parts.length===3&&parts[2]===activeLeadsYear;
   });
 
-  const yearLabel=activeLeadsYear==='all'?'':` · ${activeLeadsYear}`;
-  document.getElementById('leadsDataTag').textContent=`${d.length} leads loaded${yearLabel}`;
-  
+  document.getElementById('page-leads').classList.toggle('leads-empty',LEADS_DATA.length===0);
+  const leadsEmptyEl=document.getElementById('leadsEmpty');
+  if(leadsEmptyEl)leadsEmptyEl.style.display=LEADS_DATA.length===0?'flex':'none';
+  if(LEADS_DATA.length===0){document.getElementById('leadsDataTag').textContent='ยังไม่มีข้อมูล';return;}
+
+  document.getElementById('leadsDataTag').textContent=`${LEADS_DATA.length} leads · อัปเดต ${LS.date('leads')||'—'}${activeLeadsYear!=='all'?' · '+activeLeadsYear:''}`;
+
   const total=d.length;
   const qualify=d.filter(l=>l.stage==='Qualify Lead').length;
   const toYue=d.filter(l=>l.stage==='Land to Yuedpao').length;
@@ -960,12 +1081,14 @@ function renderAds(){
   // sync year tab UI
   ['all','2025','2026'].forEach(y=>{const el=document.getElementById('adsYtab-'+y);if(el)el.classList.toggle('active',y===activeAdsYear);});
 
+  document.getElementById('page-ads').classList.toggle('ads-empty',ADS_DATA.length===0);
+  const adsEmptyEl=document.getElementById('adsEmpty');
+  if(adsEmptyEl)adsEmptyEl.style.display=ADS_DATA.length===0?'flex':'none';
   if(!ADS_DATA.length){document.getElementById('adsDataTag').textContent='ยังไม่มีข้อมูล';return;}
   const d=activeAdsYear==='all'?ADS_DATA:ADS_DATA.filter(r=>{
     const yr=r.start?r.start.split('-')[0]:''; return yr===activeAdsYear;
   });
-  const yearLabel=activeAdsYear==='all'?'':` · ${activeAdsYear}`;
-  document.getElementById('adsDataTag').textContent=`${d.length} ads loaded${yearLabel}`;
+  document.getElementById('adsDataTag').textContent=`${d.length} ads · อัปเดต ${LS.date('ads')||'—'}${activeAdsYear!=='all'?' · '+activeAdsYear:''}`;
 
   const totalSpend=d.reduce((s,r)=>s+r.spend,0);
   const totalReach=d.reduce((s,r)=>s+r.reach,0);
@@ -1061,31 +1184,83 @@ function renderAds(){
   });
 })();
 
+function editorSetType(t){
+  editorType=t;
+  renderEditor();
+}
+
 function renderEditor(){
+  // sync tab active state
+  ['posts','leads','ads','notes'].forEach(t=>{
+    const el=document.getElementById('editorTab-'+t);
+    if(el)el.classList.toggle('active',t===editorType);
+  });
   const badge=document.getElementById('editorBadge');
-  if(badge)badge.textContent=`${DATA.length} posts · ${activeBrand.toUpperCase()}`;
+  const counts={posts:DATA.length,leads:LEADS_DATA.length,ads:ADS_DATA.length,notes:Object.keys(NOTES_DATA).length};
+  if(badge)badge.textContent=`${counts[editorType]} ${editorType} · ${activeBrand.toUpperCase()}`;
   const chkAll=document.getElementById('editorSelectAll');
   if(chkAll){chkAll.checked=false;chkAll.indeterminate=false;}
+  const thead=document.getElementById('editorThead');
   const tbody=document.getElementById('editorTbody');
   if(!tbody)return;
-  tbody.innerHTML=DATA.map((p,i)=>{
-    const cats=[p.cat1,p.cat2,p.cat3].filter(Boolean).join(' / ');
-    const safeLink=(p.link||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return`<tr data-idx="${i}">
+
+  if(editorType==='posts'){
+    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Date</th><th>Category</th><th>Post Type</th><th>Brand</th><th>Reach</th><th>Views</th><th>Interactions</th><th>%Reach</th><th>%Eng</th><th>Leads</th><th>Permalink</th></tr>`;
+    tbody.innerHTML=DATA.map((p,i)=>{
+      const cats=[p.cat1,p.cat2,p.cat3].filter(Boolean).join(' / ');
+      const safeLink=(p.link||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return`<tr data-idx="${i}">
+        <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+        <td contenteditable="true" data-field="date"  class="mono editor-cell">${p.date||''}</td>
+        <td contenteditable="true" data-field="cats"  class="editor-cell">${cats}</td>
+        <td contenteditable="true" data-field="type"  class="editor-cell">${p.type||''}</td>
+        <td contenteditable="true" data-field="brand" class="editor-cell">${p.brand||''}</td>
+        <td contenteditable="true" data-field="reach" class="mono editor-cell">${p.reach||0}</td>
+        <td contenteditable="true" data-field="view"  class="mono editor-cell">${p.view||0}</td>
+        <td contenteditable="true" data-field="interactions" class="mono editor-cell">${p.interactions||0}</td>
+        <td contenteditable="true" data-field="pct_reach" class="mono editor-cell">${p.pct_reach||0}</td>
+        <td contenteditable="true" data-field="pct_eng"   class="mono editor-cell">${p.pct_eng||0}</td>
+        <td contenteditable="true" data-field="leads" class="mono editor-cell">${p.leads||0}</td>
+        <td contenteditable="true" data-field="link"  class="editor-cell" style="font-size:11px;color:var(--blue)">${safeLink}</td>
+      </tr>`;
+    }).join('');
+  } else if(editorType==='leads'){
+    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Date</th><th>Customer</th><th>Channel</th><th>Product Category</th><th>Stage</th><th>Contact Person</th><th>Est.Value</th><th>Est.Qty</th><th>Notes</th></tr>`;
+    tbody.innerHTML=LEADS_DATA.map((l,i)=>`<tr data-idx="${i}">
       <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
-      <td contenteditable="true" data-field="date"  class="mono editor-cell">${p.date||''}</td>
-      <td contenteditable="true" data-field="cats"  class="editor-cell">${cats}</td>
-      <td contenteditable="true" data-field="type"  class="editor-cell">${p.type||''}</td>
-      <td contenteditable="true" data-field="brand" class="editor-cell">${p.brand||''}</td>
-      <td contenteditable="true" data-field="reach" class="mono editor-cell">${p.reach||0}</td>
-      <td contenteditable="true" data-field="view"  class="mono editor-cell">${p.view||0}</td>
-      <td contenteditable="true" data-field="interactions" class="mono editor-cell">${p.interactions||0}</td>
-      <td contenteditable="true" data-field="pct_reach" class="mono editor-cell">${p.pct_reach||0}</td>
-      <td contenteditable="true" data-field="pct_eng"   class="mono editor-cell">${p.pct_eng||0}</td>
-      <td contenteditable="true" data-field="leads" class="mono editor-cell">${p.leads||0}</td>
-      <td contenteditable="true" data-field="link"  class="editor-cell" style="font-size:11px;color:var(--blue)">${safeLink}</td>
-    </tr>`;
-  }).join('');
+      <td contenteditable="true" data-field="date"       class="mono editor-cell">${l.date||''}</td>
+      <td contenteditable="true" data-field="customer"   class="editor-cell">${l.customer||''}</td>
+      <td contenteditable="true" data-field="channel"    class="editor-cell">${l.channel||''}</td>
+      <td contenteditable="true" data-field="product_cat" class="editor-cell">${l.product_cat||''}</td>
+      <td contenteditable="true" data-field="stage"      class="editor-cell">${l.stage||''}</td>
+      <td contenteditable="true" data-field="contact_person" class="editor-cell">${l.contact_person||''}</td>
+      <td contenteditable="true" data-field="est_value"  class="mono editor-cell">${l.est_value||''}</td>
+      <td contenteditable="true" data-field="est_qty"    class="mono editor-cell">${l.est_qty||''}</td>
+      <td contenteditable="true" data-field="notes"      class="editor-cell" style="font-size:11px">${l.notes||''}</td>
+    </tr>`).join('');
+  } else if(editorType==='ads'){
+    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Ad Name</th><th>Delivery</th><th>Result Type</th><th>Results</th><th>Cost/Result</th><th>Spend(THB)</th><th>Reach</th><th>Impressions</th><th>Msg Contacts</th><th>Start Date</th></tr>`;
+    tbody.innerHTML=ADS_DATA.map((r,i)=>`<tr data-idx="${i}">
+      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+      <td contenteditable="true" data-field="ad_name"      class="editor-cell">${r.ad_name||''}</td>
+      <td contenteditable="true" data-field="delivery"     class="editor-cell">${r.delivery||''}</td>
+      <td contenteditable="true" data-field="result_type"  class="editor-cell">${r.result_type||''}</td>
+      <td contenteditable="true" data-field="results"      class="mono editor-cell">${r.results||0}</td>
+      <td contenteditable="true" data-field="cost_per_result" class="mono editor-cell">${r.cost_per_result||0}</td>
+      <td contenteditable="true" data-field="spend"        class="mono editor-cell">${r.spend||0}</td>
+      <td contenteditable="true" data-field="reach"        class="mono editor-cell">${r.reach||0}</td>
+      <td contenteditable="true" data-field="impressions"  class="mono editor-cell">${r.impressions||0}</td>
+      <td contenteditable="true" data-field="msg_contacts" class="mono editor-cell">${r.msg_contacts||0}</td>
+      <td contenteditable="true" data-field="start"        class="mono editor-cell">${r.start||''}</td>
+    </tr>`).join('');
+  } else if(editorType==='notes'){
+    const months=[...new Set(DATA.map(p=>p.month).filter(Boolean))].sort((a,b)=>MONTH_ORDER.indexOf(a)-MONTH_ORDER.indexOf(b));
+    if(thead)thead.innerHTML=`<tr><th>Month</th><th>Note</th></tr>`;
+    tbody.innerHTML=months.map(m=>`<tr data-month="${m}">
+      <td class="mono" style="color:var(--muted)">${m}</td>
+      <td contenteditable="true" data-field="note" class="editor-cell">${NOTES_DATA[m]||''}</td>
+    </tr>`).join('');
+  }
 }
 
 function editorRowFromTr(tr){
@@ -1108,30 +1283,80 @@ function editorRowFromTr(tr){
   };
 }
 
+function editorLeadsRowFromTr(tr){
+  const g=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
+  return{date:g('date'),customer:g('customer'),channel:g('channel'),product_cat:g('product_cat'),stage:g('stage'),contact_person:g('contact_person'),est_value:g('est_value'),est_qty:g('est_qty'),notes:g('notes'),opportunity:'',contact_role:'',lead_id:'',ad_creative:'',product_interest:'',sales_status:'',bounce:''};
+}
+
+function editorAdsRowFromTr(tr){
+  const g=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
+  return{ad_name:g('ad_name'),delivery:g('delivery'),result_type:g('result_type'),results:parseFloat(g('results'))||0,cost_per_result:parseFloat(g('cost_per_result'))||0,spend:parseFloat(g('spend'))||0,reach:parseInt(g('reach'))||0,impressions:parseInt(g('impressions'))||0,msg_contacts:parseInt(g('msg_contacts'))||0,start:g('start'),new_contacts:0,views:0,clicks:0,post_eng:0,ad_set:'',cpm:0,cpc:0};
+}
+
+function editorNotesFromTbody(){
+  const notes={};
+  document.querySelectorAll('#editorTbody tr[data-month]').forEach(tr=>{
+    const month=tr.dataset.month;
+    const el=tr.querySelector('[data-field="note"]');
+    const val=el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';
+    if(val)notes[month]=val;
+  });
+  return notes;
+}
+
 function editorAddRow(){
+  if(editorType==='notes'){return;}
   const tbody=document.getElementById('editorTbody');
   const tr=document.createElement('tr');
   tr.dataset.idx='new';
-  tr.innerHTML=`
-    <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
-    <td contenteditable="true" data-field="date"  class="mono editor-cell"></td>
-    <td contenteditable="true" data-field="cats"  class="editor-cell"></td>
-    <td contenteditable="true" data-field="type"  class="editor-cell"></td>
-    <td contenteditable="true" data-field="brand" class="editor-cell"></td>
-    <td contenteditable="true" data-field="reach" class="mono editor-cell">0</td>
-    <td contenteditable="true" data-field="view"  class="mono editor-cell">0</td>
-    <td contenteditable="true" data-field="interactions" class="mono editor-cell">0</td>
-    <td contenteditable="true" data-field="pct_reach" class="mono editor-cell">0</td>
-    <td contenteditable="true" data-field="pct_eng"   class="mono editor-cell">0</td>
-    <td contenteditable="true" data-field="leads" class="mono editor-cell">0</td>
-    <td contenteditable="true" data-field="link"  class="editor-cell" style="font-size:11px;color:var(--blue)"></td>`;
+  if(editorType==='posts'){
+    tr.innerHTML=`
+      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+      <td contenteditable="true" data-field="date"  class="mono editor-cell"></td>
+      <td contenteditable="true" data-field="cats"  class="editor-cell"></td>
+      <td contenteditable="true" data-field="type"  class="editor-cell"></td>
+      <td contenteditable="true" data-field="brand" class="editor-cell"></td>
+      <td contenteditable="true" data-field="reach" class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="view"  class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="interactions" class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="pct_reach" class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="pct_eng"   class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="leads" class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="link"  class="editor-cell" style="font-size:11px;color:var(--blue)"></td>`;
+  } else if(editorType==='leads'){
+    tr.innerHTML=`
+      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+      <td contenteditable="true" data-field="date"       class="mono editor-cell"></td>
+      <td contenteditable="true" data-field="customer"   class="editor-cell"></td>
+      <td contenteditable="true" data-field="channel"    class="editor-cell"></td>
+      <td contenteditable="true" data-field="product_cat" class="editor-cell"></td>
+      <td contenteditable="true" data-field="stage"      class="editor-cell"></td>
+      <td contenteditable="true" data-field="contact_person" class="editor-cell"></td>
+      <td contenteditable="true" data-field="est_value"  class="mono editor-cell"></td>
+      <td contenteditable="true" data-field="est_qty"    class="mono editor-cell"></td>
+      <td contenteditable="true" data-field="notes"      class="editor-cell"></td>`;
+  } else if(editorType==='ads'){
+    tr.innerHTML=`
+      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+      <td contenteditable="true" data-field="ad_name"      class="editor-cell"></td>
+      <td contenteditable="true" data-field="delivery"     class="editor-cell"></td>
+      <td contenteditable="true" data-field="result_type"  class="editor-cell"></td>
+      <td contenteditable="true" data-field="results"      class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="cost_per_result" class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="spend"        class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="reach"        class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="impressions"  class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="msg_contacts" class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="start"        class="mono editor-cell"></td>`;
+  }
   tbody.appendChild(tr);
   tr.scrollIntoView({block:'nearest'});
-  const first=tr.querySelector('[data-field="date"]');
+  const first=tr.querySelector('.editor-cell');
   if(first)first.focus();
 }
 
 function editorDeleteSelected(){
+  if(editorType==='notes'){alert('ไม่สามารถลบ Notes แถวได้');return;}
   const rows=[...document.querySelectorAll('#editorTbody tr')];
   const toDelete=rows.filter(tr=>tr.querySelector('.editor-chk')?.checked);
   if(!toDelete.length){alert('ยังไม่ได้เลือกแถวใด');return;}
@@ -1144,19 +1369,63 @@ function editorDeleteSelected(){
 
 function editorSaveChanges(){
   const rows=[...document.querySelectorAll('#editorTbody tr')];
-  const newData=rows.map(editorRowFromTr).filter(p=>p.date||p.link||p.type);
-  DATA=newData;
-  LS.save('posts',DATA);
-  updateBadge();
-  if(DATA.length>0)showDashboard();
-  renderAll();
-  renderEditor();
   const badge=document.getElementById('editorBadge');
-  if(badge){
-    badge.style.color='var(--teal2)';
-    badge.textContent=`✅ บันทึกแล้ว ${DATA.length} posts`;
-    setTimeout(()=>{badge.style.color='';badge.textContent=`${DATA.length} posts · ${activeBrand.toUpperCase()}`;},2500);
+  if(editorType==='posts'){
+    const newData=rows.map(editorRowFromTr).filter(p=>p.date||p.link||p.type);
+    DATA=newData;
+    LS.save('posts',DATA);
+    updateBadge();
+    if(DATA.length>0)showDashboard();
+    renderAll();
+    renderEditor();
+    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${DATA.length} posts`;setTimeout(()=>{badge.style.color='';badge.textContent=`${DATA.length} posts · ${activeBrand.toUpperCase()}`;},2500);}
+  } else if(editorType==='leads'){
+    const newData=rows.map(editorLeadsRowFromTr).filter(l=>l.customer||l.channel);
+    LEADS_DATA=newData;
+    LS.save('leads',LEADS_DATA);
+    renderLeads();
+    renderEditor();
+    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${LEADS_DATA.length} leads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${LEADS_DATA.length} leads · ${activeBrand.toUpperCase()}`;},2500);}
+  } else if(editorType==='ads'){
+    const newData=rows.map(editorAdsRowFromTr).filter(r=>r.ad_name||r.spend);
+    ADS_DATA=newData;
+    LS.save('ads',ADS_DATA);
+    renderAds();
+    renderEditor();
+    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${ADS_DATA.length} ads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${ADS_DATA.length} ads · ${activeBrand.toUpperCase()}`;},2500);}
+  } else if(editorType==='notes'){
+    NOTES_DATA=editorNotesFromTbody();
+    LS.save('notes',NOTES_DATA);
+    renderExec();
+    renderContent();
+    renderEditor();
+    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึก Notes แล้ว`;setTimeout(()=>{badge.style.color='';badge.textContent=`${Object.keys(NOTES_DATA).length} notes · ${activeBrand.toUpperCase()}`;},2500);}
   }
+}
+
+function editorExportCSV(){
+  let headers=[],rows=[];
+  if(editorType==='posts'){
+    headers=['Date','Category','Post Type','Brand','Reach','Views','Interactions','%Reach','%Eng','Leads','Permalink'];
+    rows=DATA.map(p=>[[p.cat1,p.cat2,p.cat3].filter(Boolean).join('/'),[p.date||''],[p.type||''],[p.brand||''],[p.reach||0],[p.view||0],[p.interactions||0],[p.pct_reach||0],[p.pct_eng||0],[p.leads||0],[p.link||'']].flat());
+  } else if(editorType==='leads'){
+    headers=['Date','Customer','Channel','Product Category','Stage','Contact Person','Est.Value','Est.Qty','Notes'];
+    rows=LEADS_DATA.map(l=>[[l.date||''],[l.customer||''],[l.channel||''],[l.product_cat||''],[l.stage||''],[l.contact_person||''],[l.est_value||''],[l.est_qty||''],[l.notes||'']].flat());
+  } else if(editorType==='ads'){
+    headers=['Ad Name','Delivery','Result Type','Results','Cost/Result','Spend(THB)','Reach','Impressions','Msg Contacts','Start Date'];
+    rows=ADS_DATA.map(r=>[[r.ad_name||''],[r.delivery||''],[r.result_type||''],[r.results||0],[r.cost_per_result||0],[r.spend||0],[r.reach||0],[r.impressions||0],[r.msg_contacts||0],[r.start||'']].flat());
+  } else if(editorType==='notes'){
+    headers=['Month','Note'];
+    rows=Object.entries(NOTES_DATA).map(([m,n])=>[m,n]);
+  }
+  const esc=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const csv=[headers.map(esc).join(','),...rows.map(r=>r.map(esc).join(','))].join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${editorType}_export_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
 function editorToggleAll(chk){
