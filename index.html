@@ -188,8 +188,12 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
 <input type="file" id="csvAddMonth"   accept=".csv"       onchange="addMonthCSV(this)">
 <input type="file" id="leadsFileIn"   accept=".csv"       onchange="loadNewLeadsCSV(this)">
 <input type="file" id="leadsAddMonthIn" accept=".csv"     onchange="addMonthLeadsCSV(this)">
-<input type="file" id="adsFileIn"     accept=".xlsx,.xls" onchange="loadNewAdsExcel(this)">
-<input type="file" id="adsAddMonthIn" accept=".xlsx,.xls" onchange="addMonthAdsExcel(this)">
+<input type="file" id="adsFileIn"      accept=".xlsx,.xls" onchange="loadNewAdsExcel(this)">
+<input type="file" id="adsAddMonthIn"  accept=".xlsx,.xls" onchange="addMonthAdsExcel(this)">
+<input type="file" id="awnFileIn"      accept=".xlsx,.xls" onchange="loadNewAwnExcel(this)">
+<input type="file" id="awnAddMonthIn"  accept=".xlsx,.xls" onchange="addMonthAwnExcel(this)">
+<input type="file" id="leadAdsFileIn"      accept=".xlsx,.xls" onchange="loadNewLeadAdsExcel(this)">
+<input type="file" id="leadAdsAddMonthIn"  accept=".xlsx,.xls" onchange="addMonthLeadAdsExcel(this)">
 
 <!-- YEAR TABS -->
 <div class="year-bar" id="yearBar">
@@ -352,43 +356,67 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
 <!-- ═══ AD SPENDING PANEL ═══ -->
 <div class="panel" id="page-ads">
   <div style="height:16px"></div>
+
+  <!-- ══════════ AWN (Awareness) SECTION ══════════ -->
   <div class="panel-upload-bar">
-    <span class="pub-label">Ad Spending</span>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsFileIn').click()">🔄 Load New</button>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsAddMonthIn').click()">➕ Add Month</button>
-    <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleAds()">▶ Load Sample</button>
-    <span class="pub-tag" id="adsDataTag"></span>
+    <span class="pub-label">📡 AWN (Awareness)</span>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('awnFileIn').click()">🔄 Load New</button>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('awnAddMonthIn').click()">➕ Add Month</button>
+    <span class="pub-tag" id="awnDataTag"></span>
   </div>
-  <div id="adsEmpty" class="empty-state" style="display:none">
-    <div class="empty-state-icon">💰</div>
-    <div class="empty-state-title">ยังไม่มีข้อมูล Ad Spending</div>
-    <div class="empty-state-sub">กรุณาอัปโหลดไฟล์ Excel ของ Ads หรือกด Load Sample เพื่อดูตัวอย่าง</div>
+  <div id="awnEmpty" class="empty-state" style="display:none">
+    <div class="empty-state-icon">📡</div>
+    <div class="empty-state-title">ยังไม่มีข้อมูล AWN — กรุณา Upload AWN File</div>
+    <div class="empty-state-sub">ไฟล์ต้องมีคอลัมน์: Amount spent (THB), Reach, Impressions, Reporting starts</div>
     <div class="empty-state-btns">
-      <button class="es-btn es-btn-fill" onclick="document.getElementById('adsFileIn').click()">🔄 Load New</button>
-      <button class="es-btn es-btn-out"  onclick="document.getElementById('adsAddMonthIn').click()">➕ Add Month</button>
-      <button class="es-btn es-btn-out"  onclick="loadSampleAds()">▶ Load Sample</button>
+      <button class="es-btn es-btn-fill" onclick="document.getElementById('awnFileIn').click()">🔄 Load New</button>
+      <button class="es-btn es-btn-out"  onclick="document.getElementById('awnAddMonthIn').click()">➕ Add Month</button>
     </div>
   </div>
-  <div class="panel-year-bar">
-    <span class="period-label">Year</span>
-    <span class="pchip active" id="adsYtab-all"  onclick="setAdsYear('all')">All</span>
-    <span class="pchip"        id="adsYtab-2025" onclick="setAdsYear('2025')">2025</span>
-    <span class="pchip"        id="adsYtab-2026" onclick="setAdsYear('2026')">2026</span>
+  <div id="awnContent" style="display:none">
+    <div class="panel-year-bar">
+      <span class="period-label">Year</span>
+      <span class="pchip active" id="awnYtab-all"  onclick="setAwnYear('all')">All</span>
+      <span class="pchip"        id="awnYtab-2025" onclick="setAwnYear('2025')">2025</span>
+      <span class="pchip"        id="awnYtab-2026" onclick="setAwnYear('2026')">2026</span>
+    </div>
+    <div class="kpi-strip" id="awnKPIs"></div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Spend by Month — AWN (THB)</div><canvas id="awnSpendChart" height="280"></canvas></div>
+      <div class="card"><div class="card-title">Reach by Month — AWN</div><canvas id="awnReachChart" height="280"></canvas></div>
+    </div>
   </div>
-  <div class="kpi-strip" id="adsKPIs"></div>
-  <div class="grid-2">
-    <div class="card"><div class="card-title">Spend by Ad Creative (THB)</div><canvas id="adsSpendChart" height="320"></canvas></div>
-    <div class="card"><div class="card-title">Cost per Result (THB)</div><canvas id="adsCostChart" height="320"></canvas></div>
+
+  <!-- divider -->
+  <div style="height:0;border-bottom:2px solid var(--border);margin:24px 0"></div>
+
+  <!-- ══════════ LEAD (Chat Message) SECTION ══════════ -->
+  <div class="panel-upload-bar">
+    <span class="pub-label">💬 Lead (Chat Message)</span>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadAdsFileIn').click()">🔄 Load New</button>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadAdsAddMonthIn').click()">➕ Add Month</button>
+    <span class="pub-tag" id="leadAdsDataTag"></span>
   </div>
-  <div class="grid-2">
-    <div class="card"><div class="card-title">Reach &amp; Impressions by Ad</div><canvas id="adsReachChart" height="200"></canvas></div>
-    <div class="card"><div class="card-title">Messaging Contacts by Ad</div><canvas id="adsMsgChart" height="200"></canvas></div>
+  <div id="leadAdsEmpty" class="empty-state" style="display:none">
+    <div class="empty-state-icon">💬</div>
+    <div class="empty-state-title">ยังไม่มีข้อมูล Lead — กรุณา Upload Lead File</div>
+    <div class="empty-state-sub">ไฟล์ต้องมีคอลัมน์: Amount spent (THB), Results, Cost per results, Reporting starts</div>
+    <div class="empty-state-btns">
+      <button class="es-btn es-btn-fill" onclick="document.getElementById('leadAdsFileIn').click()">🔄 Load New</button>
+      <button class="es-btn es-btn-out"  onclick="document.getElementById('leadAdsAddMonthIn').click()">➕ Add Month</button>
+    </div>
   </div>
-  <div class="card" style="margin-bottom:0">
-    <div class="card-title">Ad Detail <span id="adsTableCount"></span></div>
-    <div class="tbl-wrap">
-      <table><thead><tr><th>Ad Name</th><th>Delivery</th><th>Result Type</th><th>Results</th><th>Cost/Result</th><th>Spend (THB)</th><th>Reach</th><th>Impressions</th><th>Msg Contacts</th><th>Views</th><th>Clicks</th><th>CPM</th></tr></thead>
-      <tbody id="adsTable"></tbody></table>
+  <div id="leadAdsContent" style="display:none">
+    <div class="panel-year-bar">
+      <span class="period-label">Year</span>
+      <span class="pchip active" id="leadYtab-all"  onclick="setLeadAdsYear('all')">All</span>
+      <span class="pchip"        id="leadYtab-2025" onclick="setLeadAdsYear('2025')">2025</span>
+      <span class="pchip"        id="leadYtab-2026" onclick="setLeadAdsYear('2026')">2026</span>
+    </div>
+    <div class="kpi-strip" id="leadAdsKPIs"></div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">Spend by Month — Lead (THB)</div><canvas id="leadAdsSpendChart" height="280"></canvas></div>
+      <div class="card"><div class="card-title">Leads by Month</div><canvas id="leadAdsResultChart" height="280"></canvas></div>
     </div>
   </div>
 </div>
@@ -413,7 +441,8 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div style="display:flex;align-items:center;gap:6px;padding:0 0 14px;flex-wrap:wrap">
       <span class="pchip active" id="editorTab-posts"  onclick="editorSetType('posts')">📊 Posts</span>
       <span class="pchip"        id="editorTab-leads"  onclick="editorSetType('leads')">📋 Leads</span>
-      <span class="pchip"        id="editorTab-ads"    onclick="editorSetType('ads')">💰 Ads</span>
+      <span class="pchip"        id="editorTab-ads_awn"  onclick="editorSetType('ads_awn')">📡 Ads AWN</span>
+      <span class="pchip"        id="editorTab-ads_lead" onclick="editorSetType('ads_lead')">💬 Ads Lead</span>
       <span class="pchip"        id="editorTab-notes"  onclick="editorSetType('notes')">📌 Notes</span>
     </div>
     <div class="tbl-wrap">
@@ -442,9 +471,13 @@ let activeYear='all';
 let activeBrand='nytg';
 let LEADS_DATA=[];
 let ADS_DATA=[];
+let AWN_DATA=[];
+let LEAD_ADS_DATA=[];
 let NOTES_DATA={};
 let activeLeadsYear='all';
 let activeAdsYear='all';
+let activeAwnYear='all';
+let activeLeadAdsYear='all';
 let editorType='posts';
 let charts={};
 
@@ -481,9 +514,13 @@ function initBrandData(){
   const posts=LS.load('posts');
   LEADS_DATA=LS.load('leads')||[];
   ADS_DATA=LS.load('ads')||[];
+  AWN_DATA=LS.load('ads_awn')||[];
+  LEAD_ADS_DATA=LS.load('ads_lead')||[];
   NOTES_DATA=LS.load('notes')||{};
   activeLeadsYear='all';
   activeAdsYear='all';
+  activeAwnYear='all';
+  activeLeadAdsYear='all';
   editorType='posts';
   if(posts&&posts.length>0){
     DATA=posts;activePeriod='all';
@@ -493,6 +530,8 @@ function initBrandData(){
   }
   renderLeads();
   renderAds();
+  renderAwn();
+  renderLeadAds();
   renderEditor();
 }
 
@@ -639,6 +678,48 @@ function parseAdsRow(r){
   };
 }
 
+function parseAwnRow(r){
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr=r['Reporting starts']||r['Month']||r['Start date']||'';
+  let month='';
+  if(dateStr){try{const[y,m]=dateStr.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
+  return{
+    ad_name:r['Ad name']||'',
+    spend:parseFloat(r['Amount spent (THB)'])||0,
+    reach:parseInt(r['Reach'])||0,
+    impressions:parseInt(r['Impressions'])||0,
+    cpm:parseFloat(r['CPM (cost per 1,000 impressions) (THB)'])||0,
+    views:parseInt(r['Views'])||0,
+    clicks:parseInt(r['Clicks (all)'])||0,
+    start:r['Reporting starts']||r['Start date']||'',
+    month,
+  };
+}
+
+function parseLeadAdsRow(r){
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr=r['Reporting starts']||r['Month']||r['Start date']||'';
+  let month='';
+  if(dateStr){try{const[y,m]=dateStr.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
+  const totalImp=parseInt(r['Impressions'])||0;
+  const totalClicks=parseInt(r['Clicks (all)'])||0;
+  const ctrRaw=parseFloat(r['Click-through rate (all)'])||parseFloat(r['CTR (all)'])||0;
+  const ctr=totalImp>0?parseFloat((totalClicks/totalImp*100).toFixed(4)):ctrRaw;
+  return{
+    ad_name:r['Ad name']||'',
+    spend:parseFloat(r['Amount spent (THB)'])||0,
+    results:parseFloat(r['Results'])||parseInt(r['Total messaging contacts'])||0,
+    cost_per_result:parseFloat(r['Cost per results'])||0,
+    ctr,
+    reach:parseInt(r['Reach'])||0,
+    impressions:totalImp,
+    msg_contacts:parseInt(r['Total messaging contacts'])||0,
+    clicks:totalClicks,
+    start:r['Reporting starts']||r['Start date']||'',
+    month,
+  };
+}
+
 // ═══════════ ADS UPLOAD HANDLERS ═══════════
 function loadNewAdsExcel(input){
   const file=input.files[0];if(!file)return;
@@ -686,6 +767,94 @@ function addMonthAdsExcel(input){
 // Aliases for backward compat
 function loadLeadsCSV(input){loadNewLeadsCSV(input);}
 function loadAdsExcel(input){loadNewAdsExcel(input);}
+
+// ═══════════ AWN UPLOAD HANDLERS ═══════════
+function loadNewAwnExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws);
+    if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const keys=Object.keys(raw[0]);
+    const missing=validateCSVHeaders(keys,['Amount spent (THB)','Reach','Impressions'],'AWN');
+    if(missing.length){alert('AWN File: ไม่พบคอลัมน์: '+missing.join(', ')+' กรุณาตรวจสอบไฟล์');input.value='';return;}
+    LS.remove('ads_awn');
+    AWN_DATA=raw.map(parseAwnRow);
+    LS.save('ads_awn',AWN_DATA);
+    renderAwn();input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function addMonthAwnExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws);
+    if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const keys=Object.keys(raw[0]);
+    const missing=validateCSVHeaders(keys,['Amount spent (THB)','Reach','Impressions'],'AWN');
+    if(missing.length){alert('AWN File: ไม่พบคอลัมน์: '+missing.join(', ')+' กรุณาตรวจสอบไฟล์');input.value='';return;}
+    const newRows=raw.map(parseAwnRow);
+    const existing=LS.load('ads_awn')||AWN_DATA;
+    const existKeys=new Set(existing.map(r=>`${r.ad_name}|${r.start||''}`));
+    const added=newRows.filter(r=>!existKeys.has(`${r.ad_name}|${r.start||''}`));
+    AWN_DATA=[...existing,...added];
+    LS.save('ads_awn',AWN_DATA);
+    renderAwn();
+    alert(`เพิ่ม ${added.length} AWN ads ใหม่`);
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ═══════════ LEAD ADS UPLOAD HANDLERS ═══════════
+function loadNewLeadAdsExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws);
+    if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const keys=Object.keys(raw[0]);
+    const missing=validateCSVHeaders(keys,['Amount spent (THB)','Results','Cost per results'],'Lead');
+    if(missing.length){alert('Lead File: ไม่พบคอลัมน์: '+missing.join(', ')+' กรุณาตรวจสอบไฟล์');input.value='';return;}
+    LS.remove('ads_lead');
+    LEAD_ADS_DATA=raw.map(parseLeadAdsRow);
+    LS.save('ads_lead',LEAD_ADS_DATA);
+    renderLeadAds();input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function addMonthLeadAdsExcel(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws);
+    if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+    const keys=Object.keys(raw[0]);
+    const missing=validateCSVHeaders(keys,['Amount spent (THB)','Results','Cost per results'],'Lead');
+    if(missing.length){alert('Lead File: ไม่พบคอลัมน์: '+missing.join(', ')+' กรุณาตรวจสอบไฟล์');input.value='';return;}
+    const newRows=raw.map(parseLeadAdsRow);
+    const existing=LS.load('ads_lead')||LEAD_ADS_DATA;
+    const existKeys=new Set(existing.map(r=>`${r.ad_name}|${r.start||''}`));
+    const added=newRows.filter(r=>!existKeys.has(`${r.ad_name}|${r.start||''}`));
+    LEAD_ADS_DATA=[...existing,...added];
+    LS.save('ads_lead',LEAD_ADS_DATA);
+    renderLeadAds();
+    alert(`เพิ่ม ${added.length} Lead ads ใหม่`);
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
 
 function loadSampleLeads(){LEADS_DATA=SAMPLE_LEADS;LS.save('leads',LEADS_DATA);renderLeads();}
 function loadSampleAds(){ADS_DATA=SAMPLE_ADS;LS.save('ads',ADS_DATA);renderAds();}
@@ -773,11 +942,27 @@ function parseLeadsCSV(text){
 // ═══════════ SAMPLE DATA LOAD ═══════════
 function loadSample(){
   DATA=SAMPLE;LEADS_DATA=SAMPLE_LEADS;ADS_DATA=SAMPLE_ADS;NOTES_DATA={};
+  // Split sample ads into AWN and Lead by result_type
+  AWN_DATA=SAMPLE_ADS.filter(r=>r.result_type==='reach').map(r=>{
+    const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dateStr=r.start||'';let month='';
+    if(dateStr){try{const[y,m]=dateStr.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
+    return{ad_name:r.ad_name,spend:r.spend,reach:r.reach,impressions:r.impressions,cpm:r.cpm||0,views:r.views||0,clicks:r.clicks||0,start:r.start||'',month};
+  });
+  LEAD_ADS_DATA=SAMPLE_ADS.filter(r=>r.result_type==='messaging').map(r=>{
+    const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dateStr=r.start||'';let month='';
+    if(dateStr){try{const[y,m]=dateStr.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
+    const totalImp=r.impressions||0;const totalClicks=r.clicks||0;
+    const ctr=totalImp>0?parseFloat((totalClicks/totalImp*100).toFixed(4)):0;
+    return{ad_name:r.ad_name,spend:r.spend,results:r.msg_contacts||r.results||0,cost_per_result:r.cost_per_result||0,ctr,reach:r.reach,impressions:totalImp,msg_contacts:r.msg_contacts||0,clicks:totalClicks,start:r.start||'',month};
+  });
   activePeriod='all';
   LS.save('posts',DATA);LS.save('leads',LEADS_DATA);LS.save('ads',ADS_DATA);LS.save('notes',NOTES_DATA);
+  LS.save('ads_awn',AWN_DATA);LS.save('ads_lead',LEAD_ADS_DATA);
   updateBadge();showDashboard();
   setTag('✅ Sample Data · Jan 2025 – Apr 2026');
-  renderAll();renderLeads();renderAds();renderEditor();
+  renderAll();renderLeads();renderAds();renderAwn();renderLeadAds();renderEditor();
 }
 function setTag(msg){document.getElementById('footerNote').textContent='NYTG Dashboard · '+msg+' · Updated '+new Date().toLocaleString('th-TH');}
 
@@ -785,6 +970,8 @@ function setTag(msg){document.getElementById('footerNote').textContent='NYTG Das
 function setYear(y){activeYear=y;activePeriod='all';['all','2025','2026'].forEach(id=>document.getElementById('ytab-'+id).classList.toggle('active',id===y));renderAll();}
 function setLeadsYear(y){activeLeadsYear=y;renderLeads();}
 function setAdsYear(y){activeAdsYear=y;renderAds();}
+function setAwnYear(y){activeAwnYear=y;renderAwn();}
+function setLeadAdsYear(y){activeLeadAdsYear=y;renderLeadAds();}
 function yearFiltered(data){if(activeYear==='all')return data;return data.filter(d=>d.date&&d.date.startsWith(activeYear));}
 
 // ═══════════ PERIOD FILTER ═══════════
@@ -1078,88 +1265,85 @@ function parseLeadsDate(dateStr){
 
 // ═══════════ AD SPENDING ═══════════
 function renderAds(){
-  // sync year tab UI
-  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('adsYtab-'+y);if(el)el.classList.toggle('active',y===activeAdsYear);});
+  // Legacy: kept for backward compatibility with loadSample/initBrandData
+}
 
-  document.getElementById('page-ads').classList.toggle('ads-empty',ADS_DATA.length===0);
-  const adsEmptyEl=document.getElementById('adsEmpty');
-  if(adsEmptyEl)adsEmptyEl.style.display=ADS_DATA.length===0?'flex':'none';
-  if(!ADS_DATA.length){document.getElementById('adsDataTag').textContent='ยังไม่มีข้อมูล';return;}
-  const d=activeAdsYear==='all'?ADS_DATA:ADS_DATA.filter(r=>{
-    const yr=r.start?r.start.split('-')[0]:''; return yr===activeAdsYear;
-  });
-  document.getElementById('adsDataTag').textContent=`${d.length} ads · อัปเดต ${LS.date('ads')||'—'}${activeAdsYear!=='all'?' · '+activeAdsYear:''}`;
+function renderAwn(){
+  const emptyEl=document.getElementById('awnEmpty');
+  const contentEl=document.getElementById('awnContent');
+  const tag=document.getElementById('awnDataTag');
+  if(AWN_DATA.length===0){
+    if(emptyEl)emptyEl.style.display='flex';
+    if(contentEl)contentEl.style.display='none';
+    if(tag)tag.textContent='ยังไม่มีข้อมูล';
+    return;
+  }
+  if(emptyEl)emptyEl.style.display='none';
+  if(contentEl)contentEl.style.display='';
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('awnYtab-'+y);if(el)el.classList.toggle('active',y===activeAwnYear);});
+  const d=activeAwnYear==='all'?AWN_DATA:AWN_DATA.filter(r=>{const yr=r.start?r.start.split('-')[0]:'';return yr===activeAwnYear;});
+  if(tag)tag.textContent=`${d.length} ads · อัปเดต ${LS.date('ads_awn')||'—'}${activeAwnYear!=='all'?' · '+activeAwnYear:''}`;
 
   const totalSpend=d.reduce((s,r)=>s+r.spend,0);
   const totalReach=d.reduce((s,r)=>s+r.reach,0);
-  const totalMsg=d.reduce((s,r)=>s+r.msg_contacts,0);
   const totalImp=d.reduce((s,r)=>s+r.impressions,0);
-  const totalClicks=d.reduce((s,r)=>s+r.clicks,0);
-  const msgAds=d.filter(r=>r.result_type==='messaging'&&r.msg_contacts>0);
-  const avgCPMsg=msgAds.length?msgAds.reduce((s,r)=>s+r.cost_per_result,0)/msgAds.length:0;
-
-  document.getElementById('adsKPIs').innerHTML=[
+  const cpm=totalImp>0?totalSpend/totalImp*1000:0;
+  document.getElementById('awnKPIs').innerHTML=[
     {label:'Total Spend',val:totalSpend.toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:0})+' ฿',color:'c-red'},
     {label:'Total Reach',val:fmt(totalReach),color:'c-teal'},
+    {label:'CPM (฿/1,000 imp)',val:cpm>0?'฿'+cpm.toFixed(0):'—',color:'c-amber'},
     {label:'Total Impressions',val:fmt(totalImp),color:'c-blue'},
-    {label:'Messaging Contacts',val:fmt(totalMsg),color:'c-amber'},
-    {label:'Avg Cost / Contact',val:avgCPMsg>0?avgCPMsg.toFixed(2)+' ฿':'—',color:'c-purple'},
-    {label:'Total Clicks',val:fmt(totalClicks),color:'c-ink'},
   ].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
 
-  // Group ads with same name
-  const adMap={};
-  d.forEach(r=>{
-    const k=r.ad_name;
-    if(!adMap[k])adMap[k]={spend:0,reach:0,impressions:0,msg_contacts:0,views:0,clicks:0,cpr_vals:[],result_type:r.result_type};
-    adMap[k].spend+=r.spend;adMap[k].reach+=r.reach;adMap[k].impressions+=r.impressions;
-    adMap[k].msg_contacts+=r.msg_contacts;adMap[k].views+=r.views;adMap[k].clicks+=r.clicks;
-    if(r.cost_per_result>0)adMap[k].cpr_vals.push(r.cost_per_result);
-  });
-  const adArr=Object.entries(adMap).map(([k,v])=>({
-    ...v,name:k,avg_cpr:v.cpr_vals.length?v.cpr_vals.reduce((a,b)=>a+b,0)/v.cpr_vals.length:0
-  })).sort((a,b)=>b.spend-a.spend);
-  const top12=adArr.slice(0,12);
-  const adColors=top12.map((_,i)=>{const c=['#1C59A8','#00A693','#6840B0','#C07D10','#C0351C','#00838F','#4527A0','#AD1457','#558B2F','#E65100','#0288D1','#7B1FA2'];return c[i%c.length];});
+  const monthMap={};
+  d.forEach(r=>{const m=r.month||'';if(!m)return;if(!monthMap[m])monthMap[m]={spend:0,reach:0};monthMap[m].spend+=r.spend;monthMap[m].reach+=r.reach;});
+  const months=MONTH_ORDER.filter(m=>monthMap[m]);
 
-  destroyChart('adsSpendChart');
-  charts.adsSpendChart=new Chart(document.getElementById('adsSpendChart'),{type:'bar',data:{labels:top12.map(a=>a.name.length>22?a.name.substring(0,22)+'…':a.name),datasets:[{data:top12.map(a=>a.spend),backgroundColor:adColors.map(c=>c+'CC'),borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.x.toLocaleString('th-TH',{maximumFractionDigits:0})}`}}},scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,callback:v=>'฿'+fmt(v)}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:10}}}}}});
+  destroyChart('awnSpendChart');
+  charts.awnSpendChart=new Chart(document.getElementById('awnSpendChart'),{type:'bar',data:{labels:months,datasets:[{data:months.map(m=>monthMap[m].spend),backgroundColor:'rgba(28,89,168,.7)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.y.toLocaleString('th-TH',{maximumFractionDigits:0})}`}}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>'฿'+fmt(v)}},x:{...CD.scales.x}}}});
 
-  const cprData=[...top12].filter(a=>a.avg_cpr>0).sort((a,b)=>a.avg_cpr-b.avg_cpr).slice(0,12);
-  destroyChart('adsCostChart');
-  if(cprData.length>0){
-    charts.adsCostChart=new Chart(document.getElementById('adsCostChart'),{type:'bar',data:{labels:cprData.map(a=>a.name.length>22?a.name.substring(0,22)+'…':a.name),datasets:[{data:cprData.map(a=>a.avg_cpr),backgroundColor:'rgba(192,125,16,.7)',borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.x.toFixed(2)}`}}},scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,callback:v=>'฿'+v.toFixed(0)}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:10}}}}}});
+  destroyChart('awnReachChart');
+  charts.awnReachChart=new Chart(document.getElementById('awnReachChart'),{type:'line',data:{labels:months,datasets:[{label:'Reach',data:months.map(m=>monthMap[m].reach),borderColor:'#00A693',backgroundColor:'rgba(0,166,147,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>fmt(v)}},x:{...CD.scales.x}}}});
+}
+
+function renderLeadAds(){
+  const emptyEl=document.getElementById('leadAdsEmpty');
+  const contentEl=document.getElementById('leadAdsContent');
+  const tag=document.getElementById('leadAdsDataTag');
+  if(LEAD_ADS_DATA.length===0){
+    if(emptyEl)emptyEl.style.display='flex';
+    if(contentEl)contentEl.style.display='none';
+    if(tag)tag.textContent='ยังไม่มีข้อมูล';
+    return;
   }
+  if(emptyEl)emptyEl.style.display='none';
+  if(contentEl)contentEl.style.display='';
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('leadYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadAdsYear);});
+  const d=activeLeadAdsYear==='all'?LEAD_ADS_DATA:LEAD_ADS_DATA.filter(r=>{const yr=r.start?r.start.split('-')[0]:'';return yr===activeLeadAdsYear;});
+  if(tag)tag.textContent=`${d.length} ads · อัปเดต ${LS.date('ads_lead')||'—'}${activeLeadAdsYear!=='all'?' · '+activeLeadAdsYear:''}`;
 
-  const topByReach=[...top12].sort((a,b)=>b.reach-a.reach).slice(0,8);
-  destroyChart('adsReachChart');
-  charts.adsReachChart=new Chart(document.getElementById('adsReachChart'),{type:'bar',data:{labels:topByReach.map(a=>a.name.length>16?a.name.substring(0,16)+'…':a.name),datasets:[{label:'Reach',data:topByReach.map(a=>a.reach),backgroundColor:'rgba(0,166,147,.7)',borderRadius:4},{label:'Impressions',data:topByReach.map(a=>a.impressions),backgroundColor:'rgba(28,89,168,.5)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}}},scales:{y:{ticks:{callback:v=>fmt(v),color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},x:{ticks:{color:'#9B9690',font:{size:9},maxRotation:30},grid:{display:false}}}}});
+  const totalSpend=d.reduce((s,r)=>s+r.spend,0);
+  const totalResults=d.reduce((s,r)=>s+r.results,0);
+  const cpl=totalResults>0?totalSpend/totalResults:0;
+  const totalClicks=d.reduce((s,r)=>s+r.clicks,0);
+  const totalImp=d.reduce((s,r)=>s+r.impressions,0);
+  const ctr=totalImp>0?totalClicks/totalImp*100:0;
+  document.getElementById('leadAdsKPIs').innerHTML=[
+    {label:'Total Spend',val:totalSpend.toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:0})+' ฿',color:'c-red'},
+    {label:'Total Results (Leads)',val:fmt(totalResults),color:'c-teal'},
+    {label:'CPL (฿/Lead)',val:cpl>0?'฿'+cpl.toFixed(2):'—',color:'c-amber'},
+    {label:'CTR',val:ctr>0?ctr.toFixed(2)+'%':'—',color:'c-blue'},
+  ].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
 
-  const msgTop=[...top12].filter(a=>a.msg_contacts>0).sort((a,b)=>b.msg_contacts-a.msg_contacts).slice(0,8);
-  destroyChart('adsMsgChart');
-  if(msgTop.length>0){
-    charts.adsMsgChart=new Chart(document.getElementById('adsMsgChart'),{type:'bar',data:{labels:msgTop.map(a=>a.name.length>16?a.name.substring(0,16)+'…':a.name),datasets:[{data:msgTop.map(a=>a.msg_contacts),backgroundColor:'rgba(104,64,176,.7)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt(v),color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},x:{ticks:{color:'#9B9690',font:{size:9},maxRotation:30},grid:{display:false}}}}});
-  }
+  const monthMap={};
+  d.forEach(r=>{const m=r.month||'';if(!m)return;if(!monthMap[m])monthMap[m]={spend:0,results:0};monthMap[m].spend+=r.spend;monthMap[m].results+=r.results;});
+  const months=MONTH_ORDER.filter(m=>monthMap[m]);
 
-  // Table (all raw rows)
-  document.getElementById('adsTableCount').textContent=d.length+' ads';
-  const delivBadge=s=>{const map={active:['#007A6C','#D5F0EC'],not_delivering:['#C07D10','#FAF0DC'],inactive:['#9B9690','#EDEAE3']};const[c,bg]=map[s]||['#9B9690','#EDEAE3'];return`<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:${bg};color:${c}">${s}</span>`;};
-  const rtBadge=s=>s==='messaging'?'<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:#DCE9F8;color:#1C59A8">Messaging</span>':'<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:#EDE8F8;color:#6840B0">Reach</span>';
-  const adsSorted=[...d].sort((a,b)=>b.spend-a.spend);
-  document.getElementById('adsTable').innerHTML=adsSorted.map(r=>`<tr>
-    <td style="font-size:12px;max-width:160px">${r.ad_name}</td>
-    <td>${delivBadge(r.delivery)}</td>
-    <td>${rtBadge(r.result_type)}</td>
-    <td class="mono">${fmt(r.results)}</td>
-    <td class="mono" style="color:${r.cost_per_result>0?'var(--amber)':'var(--muted)'}">฿${r.cost_per_result>0?r.cost_per_result.toFixed(2):'—'}</td>
-    <td class="mono" style="color:var(--red);font-weight:600">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td>
-    <td class="mono">${fmt(r.reach)}</td>
-    <td class="mono">${fmt(r.impressions)}</td>
-    <td class="mono" style="color:var(--blue)">${r.msg_contacts||'—'}</td>
-    <td class="mono">${fmt(r.views)}</td>
-    <td class="mono">${fmt(r.clicks)}</td>
-    <td class="mono">${r.cpm>0?'฿'+r.cpm.toFixed(0):'—'}</td>
-  </tr>`).join('');
+  destroyChart('leadAdsSpendChart');
+  charts.leadAdsSpendChart=new Chart(document.getElementById('leadAdsSpendChart'),{type:'bar',data:{labels:months,datasets:[{data:months.map(m=>monthMap[m].spend),backgroundColor:'rgba(192,53,28,.7)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.y.toLocaleString('th-TH',{maximumFractionDigits:0})}`}}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>'฿'+fmt(v)}},x:{...CD.scales.x}}}});
+
+  destroyChart('leadAdsResultChart');
+  charts.leadAdsResultChart=new Chart(document.getElementById('leadAdsResultChart'),{type:'line',data:{labels:months,datasets:[{label:'Leads',data:months.map(m=>monthMap[m].results),borderColor:'#C07D10',backgroundColor:'rgba(192,125,16,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>fmt(v)}},x:{...CD.scales.x}}}});
 }
 
 // ═══════════ DATA EDITOR ═══════════
@@ -1191,12 +1375,12 @@ function editorSetType(t){
 
 function renderEditor(){
   // sync tab active state
-  ['posts','leads','ads','notes'].forEach(t=>{
+  ['posts','leads','ads_awn','ads_lead','notes'].forEach(t=>{
     const el=document.getElementById('editorTab-'+t);
     if(el)el.classList.toggle('active',t===editorType);
   });
   const badge=document.getElementById('editorBadge');
-  const counts={posts:DATA.length,leads:LEADS_DATA.length,ads:ADS_DATA.length,notes:Object.keys(NOTES_DATA).length};
+  const counts={posts:DATA.length,leads:LEADS_DATA.length,ads:ADS_DATA.length,ads_awn:AWN_DATA.length,ads_lead:LEAD_ADS_DATA.length,notes:Object.keys(NOTES_DATA).length};
   if(badge)badge.textContent=`${counts[editorType]} ${editorType} · ${activeBrand.toUpperCase()}`;
   const chkAll=document.getElementById('editorSelectAll');
   if(chkAll){chkAll.checked=false;chkAll.indeterminate=false;}
@@ -1238,20 +1422,33 @@ function renderEditor(){
       <td contenteditable="true" data-field="est_qty"    class="mono editor-cell">${l.est_qty||''}</td>
       <td contenteditable="true" data-field="notes"      class="editor-cell" style="font-size:11px">${l.notes||''}</td>
     </tr>`).join('');
-  } else if(editorType==='ads'){
-    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Ad Name</th><th>Delivery</th><th>Result Type</th><th>Results</th><th>Cost/Result</th><th>Spend(THB)</th><th>Reach</th><th>Impressions</th><th>Msg Contacts</th><th>Start Date</th></tr>`;
-    tbody.innerHTML=ADS_DATA.map((r,i)=>`<tr data-idx="${i}">
+  } else if(editorType==='ads_awn'){
+    if(badge)badge.textContent=`${AWN_DATA.length} AWN ads · ${activeBrand.toUpperCase()}`;
+    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Ad Name</th><th>Spend (THB)</th><th>Reach</th><th>Impressions</th><th>CPM</th><th>Start Date</th><th>Month</th></tr>`;
+    tbody.innerHTML=AWN_DATA.map((r,i)=>`<tr data-idx="${i}">
       <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
-      <td contenteditable="true" data-field="ad_name"      class="editor-cell">${r.ad_name||''}</td>
-      <td contenteditable="true" data-field="delivery"     class="editor-cell">${r.delivery||''}</td>
-      <td contenteditable="true" data-field="result_type"  class="editor-cell">${r.result_type||''}</td>
-      <td contenteditable="true" data-field="results"      class="mono editor-cell">${r.results||0}</td>
+      <td contenteditable="true" data-field="ad_name"     class="editor-cell">${r.ad_name||''}</td>
+      <td contenteditable="true" data-field="spend"       class="mono editor-cell">${r.spend||0}</td>
+      <td contenteditable="true" data-field="reach"       class="mono editor-cell">${r.reach||0}</td>
+      <td contenteditable="true" data-field="impressions" class="mono editor-cell">${r.impressions||0}</td>
+      <td contenteditable="true" data-field="cpm"         class="mono editor-cell">${r.cpm||0}</td>
+      <td contenteditable="true" data-field="start"       class="mono editor-cell">${r.start||''}</td>
+      <td contenteditable="true" data-field="month"       class="editor-cell">${r.month||''}</td>
+    </tr>`).join('');
+  } else if(editorType==='ads_lead'){
+    if(badge)badge.textContent=`${LEAD_ADS_DATA.length} Lead ads · ${activeBrand.toUpperCase()}`;
+    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Ad Name</th><th>Spend (THB)</th><th>Results</th><th>CPL (Cost/Lead)</th><th>CTR (%)</th><th>Reach</th><th>Impressions</th><th>Start Date</th><th>Month</th></tr>`;
+    tbody.innerHTML=LEAD_ADS_DATA.map((r,i)=>`<tr data-idx="${i}">
+      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+      <td contenteditable="true" data-field="ad_name"         class="editor-cell">${r.ad_name||''}</td>
+      <td contenteditable="true" data-field="spend"           class="mono editor-cell">${r.spend||0}</td>
+      <td contenteditable="true" data-field="results"         class="mono editor-cell">${r.results||0}</td>
       <td contenteditable="true" data-field="cost_per_result" class="mono editor-cell">${r.cost_per_result||0}</td>
-      <td contenteditable="true" data-field="spend"        class="mono editor-cell">${r.spend||0}</td>
-      <td contenteditable="true" data-field="reach"        class="mono editor-cell">${r.reach||0}</td>
-      <td contenteditable="true" data-field="impressions"  class="mono editor-cell">${r.impressions||0}</td>
-      <td contenteditable="true" data-field="msg_contacts" class="mono editor-cell">${r.msg_contacts||0}</td>
-      <td contenteditable="true" data-field="start"        class="mono editor-cell">${r.start||''}</td>
+      <td contenteditable="true" data-field="ctr"             class="mono editor-cell">${r.ctr||0}</td>
+      <td contenteditable="true" data-field="reach"           class="mono editor-cell">${r.reach||0}</td>
+      <td contenteditable="true" data-field="impressions"     class="mono editor-cell">${r.impressions||0}</td>
+      <td contenteditable="true" data-field="start"           class="mono editor-cell">${r.start||''}</td>
+      <td contenteditable="true" data-field="month"           class="editor-cell">${r.month||''}</td>
     </tr>`).join('');
   } else if(editorType==='notes'){
     const months=[...new Set(DATA.map(p=>p.month).filter(Boolean))].sort((a,b)=>MONTH_ORDER.indexOf(a)-MONTH_ORDER.indexOf(b));
@@ -1335,19 +1532,28 @@ function editorAddRow(){
       <td contenteditable="true" data-field="est_value"  class="mono editor-cell"></td>
       <td contenteditable="true" data-field="est_qty"    class="mono editor-cell"></td>
       <td contenteditable="true" data-field="notes"      class="editor-cell"></td>`;
-  } else if(editorType==='ads'){
+  } else if(editorType==='ads_awn'){
     tr.innerHTML=`
       <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
-      <td contenteditable="true" data-field="ad_name"      class="editor-cell"></td>
-      <td contenteditable="true" data-field="delivery"     class="editor-cell"></td>
-      <td contenteditable="true" data-field="result_type"  class="editor-cell"></td>
-      <td contenteditable="true" data-field="results"      class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="ad_name"     class="editor-cell"></td>
+      <td contenteditable="true" data-field="spend"       class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="reach"       class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="impressions" class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="cpm"         class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="start"       class="mono editor-cell"></td>
+      <td contenteditable="true" data-field="month"       class="editor-cell"></td>`;
+  } else if(editorType==='ads_lead'){
+    tr.innerHTML=`
+      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+      <td contenteditable="true" data-field="ad_name"         class="editor-cell"></td>
+      <td contenteditable="true" data-field="spend"           class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="results"         class="mono editor-cell">0</td>
       <td contenteditable="true" data-field="cost_per_result" class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="spend"        class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="reach"        class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="impressions"  class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="msg_contacts" class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="start"        class="mono editor-cell"></td>`;
+      <td contenteditable="true" data-field="ctr"             class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="reach"           class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="impressions"     class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="start"           class="mono editor-cell"></td>
+      <td contenteditable="true" data-field="month"           class="editor-cell"></td>`;
   }
   tbody.appendChild(tr);
   tr.scrollIntoView({block:'nearest'});
@@ -1386,13 +1592,33 @@ function editorSaveChanges(){
     renderLeads();
     renderEditor();
     if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${LEADS_DATA.length} leads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${LEADS_DATA.length} leads · ${activeBrand.toUpperCase()}`;},2500);}
-  } else if(editorType==='ads'){
-    const newData=rows.map(editorAdsRowFromTr).filter(r=>r.ad_name||r.spend);
-    ADS_DATA=newData;
-    LS.save('ads',ADS_DATA);
-    renderAds();
-    renderEditor();
-    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${ADS_DATA.length} ads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${ADS_DATA.length} ads · ${activeBrand.toUpperCase()}`;},2500);}
+  } else if(editorType==='ads_awn'){
+    const g=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim():'';}
+    const newData=rows.map(tr=>{
+      const gtr=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
+      const start=gtr('start');
+      const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      let month=gtr('month');
+      if(!month&&start){try{const[y,m]=start.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
+      return{ad_name:gtr('ad_name'),spend:parseFloat(gtr('spend'))||0,reach:parseInt(gtr('reach'))||0,impressions:parseInt(gtr('impressions'))||0,cpm:parseFloat(gtr('cpm'))||0,start,month};
+    }).filter(r=>r.ad_name||r.spend);
+    AWN_DATA=newData;
+    LS.save('ads_awn',AWN_DATA);
+    renderAwn();renderEditor();
+    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${AWN_DATA.length} AWN ads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${AWN_DATA.length} AWN ads · ${activeBrand.toUpperCase()}`;},2500);}
+  } else if(editorType==='ads_lead'){
+    const newData=rows.map(tr=>{
+      const gtr=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
+      const start=gtr('start');
+      const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      let month=gtr('month');
+      if(!month&&start){try{const[y,m]=start.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
+      return{ad_name:gtr('ad_name'),spend:parseFloat(gtr('spend'))||0,results:parseFloat(gtr('results'))||0,cost_per_result:parseFloat(gtr('cost_per_result'))||0,ctr:parseFloat(gtr('ctr'))||0,reach:parseInt(gtr('reach'))||0,impressions:parseInt(gtr('impressions'))||0,msg_contacts:0,clicks:0,start,month};
+    }).filter(r=>r.ad_name||r.spend);
+    LEAD_ADS_DATA=newData;
+    LS.save('ads_lead',LEAD_ADS_DATA);
+    renderLeadAds();renderEditor();
+    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${LEAD_ADS_DATA.length} Lead ads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${LEAD_ADS_DATA.length} Lead ads · ${activeBrand.toUpperCase()}`;},2500);}
   } else if(editorType==='notes'){
     NOTES_DATA=editorNotesFromTbody();
     LS.save('notes',NOTES_DATA);
@@ -1411,9 +1637,12 @@ function editorExportCSV(){
   } else if(editorType==='leads'){
     headers=['Date','Customer','Channel','Product Category','Stage','Contact Person','Est.Value','Est.Qty','Notes'];
     rows=LEADS_DATA.map(l=>[[l.date||''],[l.customer||''],[l.channel||''],[l.product_cat||''],[l.stage||''],[l.contact_person||''],[l.est_value||''],[l.est_qty||''],[l.notes||'']].flat());
-  } else if(editorType==='ads'){
-    headers=['Ad Name','Delivery','Result Type','Results','Cost/Result','Spend(THB)','Reach','Impressions','Msg Contacts','Start Date'];
-    rows=ADS_DATA.map(r=>[[r.ad_name||''],[r.delivery||''],[r.result_type||''],[r.results||0],[r.cost_per_result||0],[r.spend||0],[r.reach||0],[r.impressions||0],[r.msg_contacts||0],[r.start||'']].flat());
+  } else if(editorType==='ads_awn'){
+    headers=['Ad Name','Spend (THB)','Reach','Impressions','CPM','Start Date','Month'];
+    rows=AWN_DATA.map(r=>[r.ad_name||'',r.spend||0,r.reach||0,r.impressions||0,r.cpm||0,r.start||'',r.month||'']);
+  } else if(editorType==='ads_lead'){
+    headers=['Ad Name','Spend (THB)','Results','CPL','CTR (%)','Reach','Impressions','Start Date','Month'];
+    rows=LEAD_ADS_DATA.map(r=>[r.ad_name||'',r.spend||0,r.results||0,r.cost_per_result||0,r.ctr||0,r.reach||0,r.impressions||0,r.start||'',r.month||'']);
   } else if(editorType==='notes'){
     headers=['Month','Note'];
     rows=Object.entries(NOTES_DATA).map(([m,n])=>[m,n]);
