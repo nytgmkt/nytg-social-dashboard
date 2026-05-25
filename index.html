@@ -139,9 +139,18 @@ tr:hover td{background:#FAFAF7}
 .funnel-cnt{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#fff;white-space:nowrap}
 .funnel-pct{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:38px;text-align:right}
 /* ── PANEL UPLOAD BAR ── */
-.panel-upload-bar{display:flex;align-items:center;gap:10px;padding:0 0 18px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:20px}
+.panel-upload-bar{display:flex;align-items:center;gap:10px;padding:0 0 14px;flex-wrap:wrap}
 .pub-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 .pub-tag{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:8px}
+.panel-year-bar{display:flex;align-items:center;gap:8px;padding:10px 0 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px}
+/* ── DATA EDITOR ── */
+.editor-toolbar{display:flex;align-items:center;gap:10px;padding:0 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+.editor-cell{outline:none;border-radius:3px;padding:1px 3px;transition:background .12s;white-space:nowrap;min-width:40px}
+.editor-cell:hover{background:var(--amber-lt);cursor:text}
+.editor-cell:focus{background:var(--blue-lt);outline:2px solid var(--blue);outline-offset:-1px;white-space:normal}
+#editorTable tr.e-selected td{background:var(--teal-lt)!important}
+#editorTable th{position:sticky;top:88px;z-index:2}
+.editor-hint{font-size:11px;color:var(--muted);font-style:italic}
 footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);font-family:'DM Mono',monospace}
 </style>
 </head>
@@ -164,6 +173,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="ntab" onclick="showPage('brand')">Brand Performance</div>
     <div class="ntab" onclick="showPage('leads')">Leads &amp; CRM</div>
     <div class="ntab" onclick="showPage('ads')">Ad Spending</div>
+    <div class="ntab" onclick="showPage('editor')">Data Editor</div>
   </div>
   <div class="nav-right">
     <span class="posts-badge" id="postsBadge">ยังไม่มีข้อมูล</span>
@@ -290,6 +300,12 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleLeads()">▶ Load Sample</button>
     <span class="pub-tag" id="leadsDataTag"></span>
   </div>
+  <div class="panel-year-bar">
+    <span class="period-label">Year</span>
+    <span class="pchip active" id="leadsYtab-all"  onclick="setLeadsYear('all')">All</span>
+    <span class="pchip"        id="leadsYtab-2025" onclick="setLeadsYear('2025')">2025</span>
+    <span class="pchip"        id="leadsYtab-2026" onclick="setLeadsYear('2026')">2026</span>
+  </div>
   <div class="kpi-strip" id="leadsKPIs"></div>
   <div class="grid-2">
     <div class="card">
@@ -327,6 +343,12 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleAds()">▶ Load Sample</button>
     <span class="pub-tag" id="adsDataTag"></span>
   </div>
+  <div class="panel-year-bar">
+    <span class="period-label">Year</span>
+    <span class="pchip active" id="adsYtab-all"  onclick="setAdsYear('all')">All</span>
+    <span class="pchip"        id="adsYtab-2025" onclick="setAdsYear('2025')">2025</span>
+    <span class="pchip"        id="adsYtab-2026" onclick="setAdsYear('2026')">2026</span>
+  </div>
   <div class="kpi-strip" id="adsKPIs"></div>
   <div class="grid-2">
     <div class="card"><div class="card-title">Spend by Ad Creative (THB)</div><canvas id="adsSpendChart" height="320"></canvas></div>
@@ -341,6 +363,46 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="tbl-wrap">
       <table><thead><tr><th>Ad Name</th><th>Delivery</th><th>Result Type</th><th>Results</th><th>Cost/Result</th><th>Spend (THB)</th><th>Reach</th><th>Impressions</th><th>Msg Contacts</th><th>Views</th><th>Clicks</th><th>CPM</th></tr></thead>
       <tbody id="adsTable"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DATA EDITOR PANEL ═══ -->
+<div class="panel" id="page-editor">
+  <div style="height:16px"></div>
+  <div class="card" style="margin-bottom:0">
+    <div class="editor-toolbar">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
+        <span class="pub-label">Data Editor</span>
+        <span class="pub-tag" id="editorBadge"></span>
+        <span class="editor-hint">คลิก cell เพื่อแก้ไข · Tab ข้ามช่อง · กด Save เพื่อบันทึก</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto">
+        <button class="upload-btn btn-outline" style="font-size:11px" onclick="editorAddRow()">➕ Add Row</button>
+        <button class="upload-btn btn-outline" style="font-size:11px;border-color:var(--red);color:var(--red)" onclick="editorDeleteSelected()">🗑️ Delete Selected</button>
+        <button class="upload-btn btn-fill" onclick="editorSaveChanges()">💾 Save Changes</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="editorTable">
+        <thead>
+          <tr>
+            <th style="width:32px;text-align:center"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)" style="cursor:pointer;width:14px;height:14px"></th>
+            <th>Date</th>
+            <th>Category<br><span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:9px">cat1 / cat2 / cat3</span></th>
+            <th>Post Type</th>
+            <th>Brand</th>
+            <th>Reach</th>
+            <th>Views</th>
+            <th>Interactions</th>
+            <th>%Reach</th>
+            <th>%Eng</th>
+            <th>Leads</th>
+            <th style="min-width:200px">Permalink</th>
+          </tr>
+        </thead>
+        <tbody id="editorTbody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -362,6 +424,8 @@ let activeYear='all';
 let activeBrand='nytg';
 let LEADS_DATA=[];
 let ADS_DATA=[];
+let activeLeadsYear='all';
+let activeAdsYear='all';
 let charts={};
 
 const EXCLUDE_CATS=['Greeting','Other'];
@@ -397,6 +461,8 @@ function initBrandData(){
   const posts=LS.load('posts');
   LEADS_DATA=LS.load('leads')||[];
   ADS_DATA=LS.load('ads')||[];
+  activeLeadsYear='all';
+  activeAdsYear='all';
   if(posts&&posts.length>0){
     DATA=posts;activePeriod='all';
     updateBadge();showDashboard();renderAll();
@@ -405,6 +471,7 @@ function initBrandData(){
   }
   if(LEADS_DATA.length>0)renderLeads();
   if(ADS_DATA.length>0)renderAds();
+  renderEditor();
 }
 
 function showDashboard(){
@@ -594,12 +661,14 @@ function loadSample(){
   LS.save('posts',DATA);LS.save('leads',LEADS_DATA);LS.save('ads',ADS_DATA);
   updateBadge();showDashboard();
   setTag('✅ Sample Data · Jan 2025 – Apr 2026');
-  renderAll();renderLeads();renderAds();
+  renderAll();renderLeads();renderAds();renderEditor();
 }
 function setTag(msg){document.getElementById('footerNote').textContent='NYTG Dashboard · '+msg+' · Updated '+new Date().toLocaleString('th-TH');}
 
 // ═══════════ YEAR FILTER ═══════════
 function setYear(y){activeYear=y;activePeriod='all';['all','2025','2026'].forEach(id=>document.getElementById('ytab-'+id).classList.toggle('active',id===y));renderAll();}
+function setLeadsYear(y){activeLeadsYear=y;renderLeads();}
+function setAdsYear(y){activeAdsYear=y;renderAds();}
 function yearFiltered(data){if(activeYear==='all')return data;return data.filter(d=>d.date&&d.date.startsWith(activeYear));}
 
 // ═══════════ PERIOD FILTER ═══════════
@@ -614,7 +683,7 @@ function filtered(){const base=yearFiltered(DATA);return activePeriod==='all'?ba
 
 // ═══════════ PAGE SWITCH ═══════════
 function showPage(p){
-  const pages=['exec','content','category','brand','leads','ads'];
+  const pages=['exec','content','category','brand','leads','ads','editor'];
   document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('active',pages[i]===p));
   const postsTabs=['exec','content','category','brand'];
   const hasData=DATA.length>0;
@@ -627,6 +696,7 @@ function showPage(p){
   else{document.getElementById('yearBar').style.display='none';document.getElementById('periodBar').style.display='none';}
   document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
+  if(p==='editor')renderEditor();
 }
 
 function renderAll(){buildPeriodBar();renderExec();renderContent();renderCategory();renderBrand();}
@@ -741,10 +811,17 @@ function renderBrand(){
 
 // ═══════════ LEADS & CRM ═══════════
 function renderLeads(){
+  // sync year tab UI
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('leadsYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadsYear);});
+
   const brandFilter=activeBrand==='nytg'?'FB-NYTG':'FB-NIC';
-  const d=LEADS_DATA.filter(l=>!l.channel||l.channel===brandFilter||l.channel==='');
-  
-  document.getElementById('leadsDataTag').textContent=`${d.length} leads loaded`;
+  const byBrand=LEADS_DATA.filter(l=>!l.channel||l.channel===brandFilter||l.channel==='');
+  const d=activeLeadsYear==='all'?byBrand:byBrand.filter(l=>{
+    const parts=l.date?l.date.split('/'):[]; return parts.length===3&&parts[2]===activeLeadsYear;
+  });
+
+  const yearLabel=activeLeadsYear==='all'?'':` · ${activeLeadsYear}`;
+  document.getElementById('leadsDataTag').textContent=`${d.length} leads loaded${yearLabel}`;
   
   const total=d.length;
   const qualify=d.filter(l=>l.stage==='Qualify Lead').length;
@@ -828,9 +905,10 @@ function renderLeads(){
     charts.leadsMonthChart=new Chart(document.getElementById('leadsMonthChart'),{type:'bar',data:{labels:sortedMonths,datasets:[{data:sortedMonths.map(m=>monthMap[m]),backgroundColor:'rgba(28,89,168,.65)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,maxRotation:35}}}}});
   }
 
-  // Channel chart (NYTG vs NIC)
+  // Channel chart (NYTG vs NIC) — use year-filtered but brand-unfiltered data for full split view
+  const chBase=activeLeadsYear==='all'?LEADS_DATA:LEADS_DATA.filter(l=>{const p=l.date?l.date.split('/'):[]; return p.length===3&&p[2]===activeLeadsYear;});
   const chMap={};
-  LEADS_DATA.forEach(l=>{if(l.channel)chMap[l.channel]=(chMap[l.channel]||0)+1;});
+  chBase.forEach(l=>{if(l.channel)chMap[l.channel]=(chMap[l.channel]||0)+1;});
   const chData=Object.entries(chMap).sort((a,b)=>b[1]-a[1]);
   destroyChart('leadsChannelChart');
   if(chData.length>0){
@@ -879,9 +957,15 @@ function parseLeadsDate(dateStr){
 
 // ═══════════ AD SPENDING ═══════════
 function renderAds(){
-  const d=ADS_DATA;
-  if(!d.length){document.getElementById('adsDataTag').textContent='ยังไม่มีข้อมูล';return;}
-  document.getElementById('adsDataTag').textContent=`${d.length} ads loaded`;
+  // sync year tab UI
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('adsYtab-'+y);if(el)el.classList.toggle('active',y===activeAdsYear);});
+
+  if(!ADS_DATA.length){document.getElementById('adsDataTag').textContent='ยังไม่มีข้อมูล';return;}
+  const d=activeAdsYear==='all'?ADS_DATA:ADS_DATA.filter(r=>{
+    const yr=r.start?r.start.split('-')[0]:''; return yr===activeAdsYear;
+  });
+  const yearLabel=activeAdsYear==='all'?'':` · ${activeAdsYear}`;
+  document.getElementById('adsDataTag').textContent=`${d.length} ads loaded${yearLabel}`;
 
   const totalSpend=d.reduce((s,r)=>s+r.spend,0);
   const totalReach=d.reduce((s,r)=>s+r.reach,0);
@@ -953,6 +1037,145 @@ function renderAds(){
     <td class="mono">${fmt(r.clicks)}</td>
     <td class="mono">${r.cpm>0?'฿'+r.cpm.toFixed(0):'—'}</td>
   </tr>`).join('');
+}
+
+// ═══════════ DATA EDITOR ═══════════
+(function setupEditorKeys(){
+  document.addEventListener('keydown',function(e){
+    const cell=document.activeElement;
+    if(!cell||!cell.classList.contains('editor-cell'))return;
+    if(e.key==='Enter'){e.preventDefault();}
+    if(e.key==='Tab'){
+      e.preventDefault();
+      const cells=[...document.querySelectorAll('#editorTable .editor-cell')];
+      const idx=cells.indexOf(cell);
+      const next=cells[idx+(e.shiftKey?-1:1)];
+      if(next)next.focus();
+    }
+  });
+  document.addEventListener('paste',function(e){
+    if(!document.activeElement||!document.activeElement.classList.contains('editor-cell'))return;
+    e.preventDefault();
+    const text=(e.clipboardData||window.clipboardData).getData('text/plain');
+    document.execCommand('insertText',false,text);
+  });
+})();
+
+function renderEditor(){
+  const badge=document.getElementById('editorBadge');
+  if(badge)badge.textContent=`${DATA.length} posts · ${activeBrand.toUpperCase()}`;
+  const chkAll=document.getElementById('editorSelectAll');
+  if(chkAll){chkAll.checked=false;chkAll.indeterminate=false;}
+  const tbody=document.getElementById('editorTbody');
+  if(!tbody)return;
+  tbody.innerHTML=DATA.map((p,i)=>{
+    const cats=[p.cat1,p.cat2,p.cat3].filter(Boolean).join(' / ');
+    const safeLink=(p.link||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return`<tr data-idx="${i}">
+      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+      <td contenteditable="true" data-field="date"  class="mono editor-cell">${p.date||''}</td>
+      <td contenteditable="true" data-field="cats"  class="editor-cell">${cats}</td>
+      <td contenteditable="true" data-field="type"  class="editor-cell">${p.type||''}</td>
+      <td contenteditable="true" data-field="brand" class="editor-cell">${p.brand||''}</td>
+      <td contenteditable="true" data-field="reach" class="mono editor-cell">${p.reach||0}</td>
+      <td contenteditable="true" data-field="view"  class="mono editor-cell">${p.view||0}</td>
+      <td contenteditable="true" data-field="interactions" class="mono editor-cell">${p.interactions||0}</td>
+      <td contenteditable="true" data-field="pct_reach" class="mono editor-cell">${p.pct_reach||0}</td>
+      <td contenteditable="true" data-field="pct_eng"   class="mono editor-cell">${p.pct_eng||0}</td>
+      <td contenteditable="true" data-field="leads" class="mono editor-cell">${p.leads||0}</td>
+      <td contenteditable="true" data-field="link"  class="editor-cell" style="font-size:11px;color:var(--blue)">${safeLink}</td>
+    </tr>`;
+  }).join('');
+}
+
+function editorRowFromTr(tr){
+  const g=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr=g('date');
+  let month='';
+  try{const[y,m]=dateStr.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}
+  const cats=g('cats').split('/').map(s=>s.trim());
+  return{
+    cat1:cats[0]||'',cat2:cats[1]||'',cat3:cats[2]||'',
+    title:g('link'),type:g('type'),date:dateStr,month,
+    view:parseFloat(g('view'))||0,reach:parseFloat(g('reach'))||0,
+    impressions:0,interactions:parseFloat(g('interactions'))||0,
+    reactions:0,comments:0,shares:0,reels:0,
+    pct_reach:parseFloat(g('pct_reach'))||0,
+    pct_eng:parseFloat(g('pct_eng'))||0,
+    leads:parseFloat(g('leads'))||0,
+    brand:g('brand'),avg_sec:0,link_clicks:0,link:g('link'),
+  };
+}
+
+function editorAddRow(){
+  const tbody=document.getElementById('editorTbody');
+  const tr=document.createElement('tr');
+  tr.dataset.idx='new';
+  tr.innerHTML=`
+    <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
+    <td contenteditable="true" data-field="date"  class="mono editor-cell"></td>
+    <td contenteditable="true" data-field="cats"  class="editor-cell"></td>
+    <td contenteditable="true" data-field="type"  class="editor-cell"></td>
+    <td contenteditable="true" data-field="brand" class="editor-cell"></td>
+    <td contenteditable="true" data-field="reach" class="mono editor-cell">0</td>
+    <td contenteditable="true" data-field="view"  class="mono editor-cell">0</td>
+    <td contenteditable="true" data-field="interactions" class="mono editor-cell">0</td>
+    <td contenteditable="true" data-field="pct_reach" class="mono editor-cell">0</td>
+    <td contenteditable="true" data-field="pct_eng"   class="mono editor-cell">0</td>
+    <td contenteditable="true" data-field="leads" class="mono editor-cell">0</td>
+    <td contenteditable="true" data-field="link"  class="editor-cell" style="font-size:11px;color:var(--blue)"></td>`;
+  tbody.appendChild(tr);
+  tr.scrollIntoView({block:'nearest'});
+  const first=tr.querySelector('[data-field="date"]');
+  if(first)first.focus();
+}
+
+function editorDeleteSelected(){
+  const rows=[...document.querySelectorAll('#editorTbody tr')];
+  const toDelete=rows.filter(tr=>tr.querySelector('.editor-chk')?.checked);
+  if(!toDelete.length){alert('ยังไม่ได้เลือกแถวใด');return;}
+  if(!confirm(`ลบ ${toDelete.length} แถวที่เลือก?`))return;
+  toDelete.forEach(tr=>tr.remove());
+  editorSyncSelectAll();
+  const badge=document.getElementById('editorBadge');
+  if(badge)badge.textContent=`ลบแล้ว ${toDelete.length} แถว — กด 💾 Save เพื่อบันทึก`;
+}
+
+function editorSaveChanges(){
+  const rows=[...document.querySelectorAll('#editorTbody tr')];
+  const newData=rows.map(editorRowFromTr).filter(p=>p.date||p.link||p.type);
+  DATA=newData;
+  LS.save('posts',DATA);
+  updateBadge();
+  if(DATA.length>0)showDashboard();
+  renderAll();
+  renderEditor();
+  const badge=document.getElementById('editorBadge');
+  if(badge){
+    badge.style.color='var(--teal2)';
+    badge.textContent=`✅ บันทึกแล้ว ${DATA.length} posts`;
+    setTimeout(()=>{badge.style.color='';badge.textContent=`${DATA.length} posts · ${activeBrand.toUpperCase()}`;},2500);
+  }
+}
+
+function editorToggleAll(chk){
+  document.querySelectorAll('#editorTbody .editor-chk').forEach(c=>{c.checked=chk.checked;c.closest('tr').classList.toggle('e-selected',chk.checked);});
+}
+
+function editorRowCheck(chk){
+  chk.closest('tr').classList.toggle('e-selected',chk.checked);
+  editorSyncSelectAll();
+}
+
+function editorSyncSelectAll(){
+  const all=document.querySelectorAll('#editorTbody .editor-chk');
+  const checked=document.querySelectorAll('#editorTbody .editor-chk:checked');
+  const sa=document.getElementById('editorSelectAll');
+  if(!sa)return;
+  if(checked.length===0){sa.indeterminate=false;sa.checked=false;}
+  else if(checked.length===all.length){sa.indeterminate=false;sa.checked=true;}
+  else{sa.indeterminate=true;}
 }
 
 // ═══════════ INIT ═══════════
