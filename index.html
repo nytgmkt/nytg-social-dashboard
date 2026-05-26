@@ -176,6 +176,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="ntab" onclick="showPage('leads')">Leads &amp; CRM</div>
     <div class="ntab" onclick="showPage('ads')">Ad Spending</div>
     <div class="ntab" onclick="showPage('editor')">Data Editor</div>
+    <div class="ntab" onclick="showPage('analysis')">📊 Analysis</div>
   </div>
   <div class="nav-right">
     <span class="posts-badge" id="postsBadge">ยังไม่มีข้อมูล</span>
@@ -194,6 +195,8 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
 <input type="file" id="awnAddMonthIn"  accept=".xlsx,.xls" onchange="addMonthAwnExcel(this)">
 <input type="file" id="leadAdsFileIn"      accept=".xlsx,.xls" onchange="loadNewLeadAdsExcel(this)">
 <input type="file" id="leadAdsAddMonthIn"  accept=".xlsx,.xls" onchange="addMonthLeadAdsExcel(this)">
+<input type="file" id="adsUnifiedFileIn"    accept=".xlsx,.xls,.csv" onchange="loadNewAdsExcel(this)">
+<input type="file" id="adsUnifiedAddMonthIn" accept=".xlsx,.xls,.csv" onchange="addMonthAdsExcel(this)">
 
 <!-- YEAR TABS -->
 <div class="year-bar" id="yearBar">
@@ -356,71 +359,74 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
 <!-- ═══ AD SPENDING PANEL ═══ -->
 <div class="panel" id="page-ads">
   <div style="height:16px"></div>
-
-  <!-- ══════════ AWN (Awareness) SECTION ══════════ -->
   <div class="panel-upload-bar">
-    <span class="pub-label">📡 AWN (Awareness)</span>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('awnFileIn').click()">🔄 Load New</button>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('awnAddMonthIn').click()">➕ Add Month</button>
-    <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleAwn()">▶ Load Sample</button>
-    <span class="pub-tag" id="awnDataTag"></span>
+    <span class="pub-label">💰 Ad Spending</span>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsUnifiedFileIn').click()">🔄 Load New</button>
+    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsUnifiedAddMonthIn').click()">➕ Add Month</button>
+    <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleUnifiedAds()">▶ Load Sample</button>
+    <span class="pub-tag" id="adsDataTag2"></span>
   </div>
-  <div id="awnEmpty" class="empty-state" style="display:none">
-    <div class="empty-state-icon">📡</div>
-    <div class="empty-state-title">ยังไม่มีข้อมูล AWN — กรุณา Upload AWN File</div>
-    <div class="empty-state-sub">ไฟล์ต้องมีคอลัมน์: Amount spent (THB), Reach, Impressions, Reporting starts</div>
+  <div id="adsEmpty2" class="empty-state" style="display:none">
+    <div class="empty-state-icon">💰</div>
+    <div class="empty-state-title">ยังไม่มีข้อมูล Ad Spending</div>
+    <div class="empty-state-sub">อัปโหลดไฟล์ xlsx จาก Facebook Ads Manager ต้องมีคอลัมน์: Ad name, Ad set name, Ad Objective, Amount spent (THB), Reporting starts</div>
     <div class="empty-state-btns">
-      <button class="es-btn es-btn-fill" onclick="document.getElementById('awnFileIn').click()">🔄 Load New</button>
-      <button class="es-btn es-btn-out"  onclick="document.getElementById('awnAddMonthIn').click()">➕ Add Month</button>
-      <button class="es-btn es-btn-out"  onclick="loadSampleAwn()">▶ Load Sample</button>
+      <button class="es-btn es-btn-fill" onclick="document.getElementById('adsUnifiedFileIn').click()">🔄 Load New</button>
+      <button class="es-btn es-btn-out"  onclick="document.getElementById('adsUnifiedAddMonthIn').click()">➕ Add Month</button>
+      <button class="es-btn es-btn-out"  onclick="loadSampleUnifiedAds()">▶ Load Sample</button>
     </div>
   </div>
-  <div id="awnContent" style="display:none">
-    <div class="panel-year-bar">
+  <div id="adsContent2" style="display:none">
+    <div class="panel-year-bar" style="gap:12px">
       <span class="period-label">Year</span>
-      <span class="pchip active" id="awnYtab-all"  onclick="setAwnYear('all')">All</span>
-      <span class="pchip"        id="awnYtab-2025" onclick="setAwnYear('2025')">2025</span>
-      <span class="pchip"        id="awnYtab-2026" onclick="setAwnYear('2026')">2026</span>
+      <span class="pchip active" id="adsYF-all"  onclick="setAdsYearFilter('all')">All</span>
+      <span class="pchip"        id="adsYF-2025" onclick="setAdsYearFilter('2025')">2025</span>
+      <span class="pchip"        id="adsYF-2026" onclick="setAdsYearFilter('2026')">2026</span>
+      <div style="width:1px;height:16px;background:var(--border);margin:0 4px"></div>
+      <span class="period-label">Objective</span>
+      <span class="pchip active" id="adsOF-all"  onclick="setAdsObjFilter('all')">All</span>
+      <span class="pchip"        id="adsOF-awn"  onclick="setAdsObjFilter('AWN')">🔵 AWN</span>
+      <span class="pchip"        id="adsOF-lead" onclick="setAdsObjFilter('Lead')">🟠 Lead</span>
+      <div style="width:1px;height:16px;background:var(--border);margin:0 4px"></div>
+      <span class="period-label">Month</span>
+      <select id="adsMF" onchange="setAdsMonthFilter(this.value)" style="font-size:12px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-family:'DM Sans',sans-serif">
+        <option value="all">All Months</option>
+      </select>
     </div>
-    <div class="kpi-strip" id="awnKPIs"></div>
-    <div class="grid-2">
-      <div class="card"><div class="card-title">Spend by Month — AWN (THB)</div><canvas id="awnSpendChart" height="280"></canvas></div>
-      <div class="card"><div class="card-title">Reach by Month — AWN</div><canvas id="awnReachChart" height="280"></canvas></div>
+    <div class="kpi-strip" id="adsKPIs2"></div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="card"><div class="card-title">Spend by Month (THB)</div><canvas id="adsSpendChart2" height="280"></canvas></div>
+      <div class="card"><div class="card-title">Reach by Month</div><canvas id="adsReachChart2" height="280"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ad Detail <span id="adsTableCount" style="font-size:12px;font-weight:600;color:var(--ink);font-family:'DM Mono',monospace;letter-spacing:0"></span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th><th>Ad Set</th><th>Ad Name</th><th>Objective</th>
+              <th style="text-align:right">Spend (฿)</th><th style="text-align:right">Results</th>
+              <th style="text-align:right">CPM</th><th style="text-align:right">Reach</th>
+            </tr>
+          </thead>
+          <tbody id="adsTableBody2"></tbody>
+        </table>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- divider -->
-  <div style="height:0;border-bottom:2px solid var(--border);margin:24px 0"></div>
-
-  <!-- ══════════ LEAD (Chat Message) SECTION ══════════ -->
-  <div class="panel-upload-bar">
-    <span class="pub-label">💬 Lead (Chat Message)</span>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadAdsFileIn').click()">🔄 Load New</button>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadAdsAddMonthIn').click()">➕ Add Month</button>
-    <span class="pub-tag" id="leadAdsDataTag"></span>
+<!-- ═══ ANALYSIS PANEL ═══ -->
+<div class="panel" id="page-analysis">
+  <div style="height:16px"></div>
+  <div class="panel-year-bar">
+    <span class="period-label">Year</span>
+    <span class="pchip active" id="anaYF-all"  onclick="setAnaYear('all')">All</span>
+    <span class="pchip"        id="anaYF-2025" onclick="setAnaYear('2025')">2025</span>
+    <span class="pchip"        id="anaYF-2026" onclick="setAnaYear('2026')">2026</span>
   </div>
-  <div id="leadAdsEmpty" class="empty-state" style="display:none">
-    <div class="empty-state-icon">💬</div>
-    <div class="empty-state-title">ยังไม่มีข้อมูล Lead — กรุณา Upload Lead File</div>
-    <div class="empty-state-sub">ไฟล์ต้องมีคอลัมน์: Amount spent (THB), Results, Cost per results, Reporting starts</div>
-    <div class="empty-state-btns">
-      <button class="es-btn es-btn-fill" onclick="document.getElementById('leadAdsFileIn').click()">🔄 Load New</button>
-      <button class="es-btn es-btn-out"  onclick="document.getElementById('leadAdsAddMonthIn').click()">➕ Add Month</button>
-    </div>
-  </div>
-  <div id="leadAdsContent" style="display:none">
-    <div class="panel-year-bar">
-      <span class="period-label">Year</span>
-      <span class="pchip active" id="leadYtab-all"  onclick="setLeadAdsYear('all')">All</span>
-      <span class="pchip"        id="leadYtab-2025" onclick="setLeadAdsYear('2025')">2025</span>
-      <span class="pchip"        id="leadYtab-2026" onclick="setLeadAdsYear('2026')">2026</span>
-    </div>
-    <div class="kpi-strip" id="leadAdsKPIs"></div>
-    <div class="grid-2">
-      <div class="card"><div class="card-title">Spend by Month — Lead (THB)</div><canvas id="leadAdsSpendChart" height="280"></canvas></div>
-      <div class="card"><div class="card-title">Leads by Month</div><canvas id="leadAdsResultChart" height="280"></canvas></div>
-    </div>
-  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:0 0 16px;flex-wrap:wrap" id="anaMonthTabs"></div>
+  <div id="anaContent"></div>
 </div>
 
 <!-- ═══ DATA EDITOR PANEL ═══ -->
@@ -443,8 +449,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div style="display:flex;align-items:center;gap:6px;padding:0 0 14px;flex-wrap:wrap">
       <span class="pchip active" id="editorTab-posts"  onclick="editorSetType('posts')">📊 Posts</span>
       <span class="pchip"        id="editorTab-leads"  onclick="editorSetType('leads')">📋 Leads</span>
-      <span class="pchip"        id="editorTab-ads_awn"  onclick="editorSetType('ads_awn')">📡 Ads AWN</span>
-      <span class="pchip"        id="editorTab-ads_lead" onclick="editorSetType('ads_lead')">💬 Ads Lead</span>
+      <span class="pchip"        id="editorTab-ads"      onclick="editorSetType('ads')">💰 Ads</span>
       <span class="pchip"        id="editorTab-notes"  onclick="editorSetType('notes')">📌 Notes</span>
     </div>
     <div class="tbl-wrap">
@@ -483,6 +488,11 @@ let activeLeadsYear='all';
 let activeAdsYear='all';
 let activeAwnYear='all';
 let activeLeadAdsYear='all';
+let activeAdsYearFilter='all';
+let activeAdsObjFilter='all';
+let activeAdsMonthFilter='all';
+let activeAnalysisYear='all';
+let activeAnalysisMonth='all';
 let editorType='posts';
 let charts={};
 
@@ -494,6 +504,7 @@ const MONTH_ORDER=['Jan 2025','Feb 2025','Mar 2025','Apr 2025','May 2025','Jun 2
 function fmt(n,d=0){if(n==null||isNaN(n))return'—';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return(n/1e3).toFixed(1)+'K';return n.toLocaleString('th-TH',{maximumFractionDigits:d});}
 function avg(arr,key){const v=arr.map(d=>d[key]).filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
 function sum(arr,key){return arr.reduce((s,d)=>s+(d[key]||0),0);}
+function capReach(v){return v>100?98:v;}
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
 const CD={plugins:{legend:{labels:{font:{family:"'DM Sans',sans-serif",size:11},usePointStyle:true,padding:14,color:'#4A4740'}}},scales:{x:{ticks:{color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},y:{ticks:{color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}}}};
@@ -662,24 +673,29 @@ function addMonthLeadsCSV(input){
   reader.readAsText(file,'utf-8');
 }
 
-function parseAdsRow(r){
+function parseAdsRow(r){return parseUnifiedAdsRow(r);}
+function parseUnifiedAdsRow(r){
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const rawDate=r['Reporting starts']||r['Date created']||r['Start date']||'';
+  let start=rawDate,month='';
+  if(rawDate){
+    const mdy=rawDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(mdy){const[,m,d,y]=mdy;start=`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;month=mo[parseInt(m)-1]+' '+y;}
+    else{try{const[y,m]=rawDate.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
+  }
+  const objRaw=String(r['Ad Objective']||r['Objective']||'');
+  const objective=objRaw.toLowerCase().includes('awareness')?'AWN':'Lead';
   return{
     ad_name:r['Ad name']||'',
-    delivery:r['Ad delivery']||'',
-    results:parseFloat(r['Results'])||0,
-    result_type:String(r['Result indicator']||'').includes('messaging')?'messaging':'reach',
-    cost_per_result:parseFloat(r['Cost per results'])||0,
+    ad_set_name:r['Ad set name']||'',
+    objective,
     spend:parseFloat(r['Amount spent (THB)'])||0,
-    impressions:parseInt(r['Impressions'])||0,
     reach:parseInt(r['Reach'])||0,
-    msg_contacts:parseInt(r['Total messaging contacts'])||0,
-    new_contacts:parseInt(r['New messaging contacts'])||0,
-    views:parseInt(r['Views'])||0,
-    clicks:parseInt(r['Clicks (all)'])||0,
-    post_eng:parseInt(r['Post engagements'])||0,
-    ad_set:r['Ad set name']||'',
+    impressions:parseInt(r['Impressions'])||0,
+    results:parseFloat(r['Results'])||parseInt(r['Total messaging contacts'])||0,
     cpm:parseFloat(r['CPM (cost per 1,000 impressions) (THB)'])||0,
-    cpc:parseFloat(r['CPC (cost per link click) (THB)'])||0,
+    start,
+    month,
   };
 }
 
@@ -745,9 +761,9 @@ function loadNewAdsExcel(input){
     if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
     const keys=Object.keys(raw[0]);
     const missing=validateCSVHeaders(keys,['Ad name','Amount spent (THB)','Reach'],'Ads');
-    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
+    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+' กรุณาตรวจสอบไฟล์');input.value='';return;}
     LS.remove('ads');
-    ADS_DATA=raw.map(parseAdsRow);
+    ADS_DATA=raw.map(parseUnifiedAdsRow);
     LS.save('ads',ADS_DATA);
     renderAds();input.value='';
   };
@@ -764,11 +780,11 @@ function addMonthAdsExcel(input){
     if(!raw.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
     const keys=Object.keys(raw[0]);
     const missing=validateCSVHeaders(keys,['Ad name','Amount spent (THB)','Reach'],'Ads');
-    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+'\nกรุณาตรวจสอบไฟล์');input.value='';return;}
-    const newRows=raw.map(parseAdsRow);
+    if(missing.length){alert('ไม่พบคอลัมน์ที่จำเป็น: '+missing.join(', ')+' กรุณาตรวจสอบไฟล์');input.value='';return;}
+    const newRows=raw.map(parseUnifiedAdsRow);
     const existing=LS.load('ads')||ADS_DATA;
-    const existKeys=new Set(existing.map(r=>`${r.ad_name}|${r.start||''}|${r.end||''}`));
-    const added=newRows.filter(r=>!existKeys.has(`${r.ad_name}|${r.start||''}|${r.end||''}`));
+    const existKeys=new Set(existing.map(r=>`${r.ad_name}|${r.start||''}`));
+    const added=newRows.filter(r=>!existKeys.has(`${r.ad_name}|${r.start||''}`));
     ADS_DATA=[...existing,...added];
     LS.save('ads',ADS_DATA);
     renderAds();
@@ -873,6 +889,10 @@ function addMonthLeadAdsExcel(input){
 function loadSampleLeads(){LEADS_DATA=SAMPLE_LEADS;LS.save('leads',LEADS_DATA);renderLeads();}
 function loadSampleAwn(){AWN_DATA=SAMPLE_AWN_DATA;LS.save('ads_awn',AWN_DATA);renderAwn();}
 function loadSampleAds(){ADS_DATA=SAMPLE_ADS;LS.save('ads',ADS_DATA);renderAds();}
+function loadSampleUnifiedAds(){
+  ADS_DATA=SAMPLE_AWN_DATA.map(r=>({ad_name:r.ad_name,ad_set_name:'',objective:'AWN',spend:r.spend,reach:r.reach,impressions:r.impressions,results:0,cpm:r.cpm,start:r.start,month:r.month}));
+  LS.save('ads',ADS_DATA);renderAds();
+}
 
 // ═══════════ CSV PARSING (posts) ═══════════
 function loadCSV(input){
@@ -968,6 +988,7 @@ function loadSample(){
     return{ad_name:r.ad_name,spend:r.spend,results:r.msg_contacts||r.results||0,cost_per_result:r.cost_per_result||0,ctr,reach:r.reach,impressions:totalImp,msg_contacts:r.msg_contacts||0,clicks:totalClicks,start:r.start||'',month};
   });
   activePeriod='all';
+  ADS_DATA=SAMPLE_AWN_DATA.map(r=>({ad_name:r.ad_name,ad_set_name:'',objective:'AWN',spend:r.spend,reach:r.reach,impressions:r.impressions,results:0,cpm:r.cpm,start:r.start,month:r.month}));
   LS.save('posts',DATA);LS.save('leads',LEADS_DATA);LS.save('ads',ADS_DATA);LS.save('notes',NOTES_DATA);
   LS.save('ads_awn',AWN_DATA);LS.save('ads_lead',LEAD_ADS_DATA);
   updateBadge();showDashboard();
@@ -979,9 +1000,14 @@ function setTag(msg){document.getElementById('footerNote').textContent='NYTG Das
 // ═══════════ YEAR FILTER ═══════════
 function setYear(y){activeYear=y;activePeriod='all';['all','2025','2026'].forEach(id=>document.getElementById('ytab-'+id).classList.toggle('active',id===y));renderAll();}
 function setLeadsYear(y){activeLeadsYear=y;renderLeads();}
-function setAdsYear(y){activeAdsYear=y;renderAds();}
-function setAwnYear(y){activeAwnYear=y;renderAwn();}
-function setLeadAdsYear(y){activeLeadAdsYear=y;renderLeadAds();}
+function setAdsYear(y){activeAdsYearFilter=y;renderAds();}
+function setAwnYear(y){activeAwnYear=y;renderAds();}
+function setLeadAdsYear(y){activeLeadAdsYear=y;renderAds();}
+function setAdsYearFilter(y){activeAdsYearFilter=y;renderAds();}
+function setAdsObjFilter(o){activeAdsObjFilter=o;renderAds();}
+function setAdsMonthFilter(m){activeAdsMonthFilter=m;renderAds();}
+function setAnaYear(y){activeAnalysisYear=y;activeAnalysisMonth='all';renderAnalysis();}
+function setAnaMonth(m){activeAnalysisMonth=m;renderAnalysis();}
 function yearFiltered(data){if(activeYear==='all')return data;return data.filter(d=>d.date&&d.date.startsWith(activeYear));}
 
 // ═══════════ PERIOD FILTER ═══════════
@@ -996,7 +1022,7 @@ function filtered(){const base=yearFiltered(DATA);return activePeriod==='all'?ba
 
 // ═══════════ PAGE SWITCH ═══════════
 function showPage(p){
-  const pages=['exec','content','category','brand','leads','ads','editor'];
+  const pages=['exec','content','category','brand','leads','ads','editor','analysis'];
   document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('active',pages[i]===p));
   const postsTabs=['exec','content','category','brand'];
   const hasData=DATA.length>0;
@@ -1011,6 +1037,7 @@ function showPage(p){
   document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   if(p==='editor')renderEditor();
+  if(p==='analysis')renderAnalysis();
 }
 
 function renderAll(){buildPeriodBar();renderExec();renderContent();renderCategory();renderBrand();}
@@ -1033,7 +1060,7 @@ function renderExec(){
   const mUsed=MONTH_ORDER.filter(m=>monthPosts[m]>0);
   destroyChart('execMonthChart');
   charts.execMonthChart=new Chart(document.getElementById('execMonthChart'),{type:'bar',data:{labels:mUsed,datasets:[{data:mUsed.map(m=>monthPosts[m]),backgroundColor:mUsed.map(m=>m.includes('2025')?'rgba(0,166,147,.65)':'rgba(28,89,168,.65)'),borderRadius:4,borderSkipped:false}]},options:{...CD,responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{afterBody:ctx=>{const n=NOTES_DATA[ctx[0]?.label];return n?['','📌 '+n]:[];}}}}}});
-  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),sub:'Unique viewers',dark:true},{label:'Leads',val:fmt(sum(d,'leads')),sub:'Lead Count',dark:true},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:true},{label:'Interactions',val:fmt(sum(d,'interactions')),sub:'React+Comment+Share',dark:true},{label:'Avg %Reach',val:avg(d,'pct_reach').toFixed(1)+'%',sub:'Viewers÷Impressions',dark:false},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',sub:'Per post avg',dark:false},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:false},{label:'Posts',val:d.length,sub:'Total posts',dark:false}];
+  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),sub:'Unique viewers',dark:true},{label:'Leads',val:fmt(LEADS_DATA.length),sub:'Lead Count (CRM)',dark:true},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:true},{label:'Interactions',val:fmt(sum(d,'reactions')+sum(d,'comments')+sum(d,'shares')),sub:'React+Comment+Share',dark:true},{label:'Avg %Reach',val:capReach(avg(d,'pct_reach')).toFixed(1)+'%',sub:'Viewers÷Impressions',dark:false},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',sub:'Per post avg',dark:false},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:false},{label:'Posts',val:d.length,sub:'Total posts',dark:false}];
   document.getElementById('execKPIs').innerHTML=kpis.map(k=>`<div class="kpi2 ${k.dark?'dark':'light'}"><div class="kpi2-label">${k.label}</div><div class="kpi2-val">${k.val}</div><div class="kpi2-sub">${k.sub}</div></div>`).join('');
 }
 
@@ -1041,7 +1068,7 @@ function renderExec(){
 function renderContent(){
   const d=filtered();
   const noGreet=d.filter(p=>!EXCLUDE_CATS.includes(p.cat1)||p.cat2||p.cat3);
-  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),color:'c-teal'},{label:'Avg %Reach',val:avg(d,'pct_reach').toFixed(1)+'%',color:'c-teal'},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',color:'c-amber'},{label:'Total Interactions',val:fmt(sum(d,'interactions')),color:'c-amber'},{label:'Total Views',val:fmt(sum(d,'view')),color:'c-ink'},{label:'Total Leads',val:fmt(sum(d,'leads')),color:'c-purple'},{label:'Posts',val:d.length,color:'c-ink'}];
+  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),color:'c-teal'},{label:'Avg %Reach',val:capReach(avg(d,'pct_reach')).toFixed(1)+'%',color:'c-teal'},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',color:'c-amber'},{label:'Total Interactions',val:fmt(sum(d,'reactions')+sum(d,'comments')+sum(d,'shares')),color:'c-amber'},{label:'Total Views',val:fmt(sum(d,'view')),color:'c-ink'},{label:'Total Leads',val:fmt(LEADS_DATA.length),color:'c-purple'},{label:'Posts',val:d.length,color:'c-ink'}];
   document.getElementById('contentKPIs').innerHTML=kpis.map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
   const mUsed=MONTH_ORDER.filter(m=>d.some(p=>p.month===m));
   const mR={},mN={};
@@ -1052,7 +1079,7 @@ function renderContent(){
   noGreet.forEach(p=>[p.cat1,p.cat2,p.cat3].forEach(c=>{if(!c||EXCLUDE_CATS.includes(c))return;if(!catPct[c])catPct[c]=[];catPct[c].push(p.pct_reach);}));
   const catRanked=Object.entries(catPct).map(([k,v])=>({cat:k,pct:v.reduce((a,b)=>a+b,0)/v.length})).sort((a,b)=>b.pct-a.pct);
   const maxPct=catRanked[0]?.pct||1;
-  document.getElementById('bestCatBox').innerHTML=catRanked.map((c,i)=>i===0?`<div class="best-top"><span class="name">${c.cat}</span><span class="pct">${c.pct.toFixed(1)}%</span></div>`:`<div class="best-row"><span class="name">${c.cat}</span><div class="bar-wrap"><div class="bar-fill" style="width:${c.pct/maxPct*100}%"></div></div><span class="pct">${c.pct.toFixed(1)}%</span></div>`).join('');
+  document.getElementById('bestCatBox').innerHTML=catRanked.map((c,i)=>i===0?`<div class="best-top"><span class="name">${c.cat}</span><span class="pct">${capReach(c.pct).toFixed(1)}%</span></div>`:`<div class="best-row"><span class="name">${c.cat}</span><div class="bar-wrap"><div class="bar-fill" style="width:${capReach(c.pct)/capReach(maxPct)*100}%"></div></div><span class="pct">${capReach(c.pct).toFixed(1)}%</span></div>`).join('');
   destroyChart('catDonut');
   charts.catDonut=new Chart(document.getElementById('catDonut'),{type:'doughnut',data:{labels:catRanked.map(c=>`${c.cat} (${c.pct.toFixed(0)}%)`),datasets:[{data:catRanked.map(c=>c.pct),backgroundColor:catRanked.map(c=>CAT_COLORS[c.cat]||'#9B9690'),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}}}}});
   const typePct={};
@@ -1064,7 +1091,7 @@ function renderContent(){
   document.getElementById('postCountLabel').textContent=d.length+' posts · sorted by %Reach';
   const sorted=[...d].sort((a,b)=>b.pct_reach-a.pct_reach);
   const cb=c=>{if(!c)return'';const bg=CAT_COLORS[c]||'#9B9690';return`<span class="badge" style="background:${bg}22;color:${bg}">${c}</span> `;};
-  document.getElementById('postTable').innerHTML=sorted.map(p=>`<tr><td><span class="badge" style="background:#EDEAE3;color:#4A4740">${p.type}</span></td><td class="mono">${p.date}</td><td>${cb(p.cat1)}${cb(p.cat2)}${cb(p.cat3)}</td><td class="mono" style="color:var(--teal2);font-weight:500">${p.pct_reach}%</td><td class="mono">${p.pct_eng}%</td><td class="mono">${fmt(p.reach)}</td><td class="mono">${fmt(p.view)}</td><td class="mono">${fmt(p.interactions)}</td><td class="mono" style="color:${p.leads>0?'var(--purple)':'var(--muted)'}">${p.leads||'—'}</td><td>${p.link?`<button class="post-link" onclick="openLink(this.dataset.url)" data-url="${p.link.replace(/"/g,'&quot;')}"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V7M8 1h3m0 0v3m0-3L5 7"/></svg>View</button>`:'<span style="color:var(--muted);font-size:11px">—</span>'}</td></tr>`).join('');
+  document.getElementById('postTable').innerHTML=sorted.map(p=>`<tr><td><span class="badge" style="background:#EDEAE3;color:#4A4740">${p.type}</span></td><td class="mono">${p.date}</td><td>${cb(p.cat1)}${cb(p.cat2)}${cb(p.cat3)}</td><td class="mono" style="color:var(--teal2);font-weight:500">${capReach(p.pct_reach)}%</td><td class="mono">${p.pct_eng}%</td><td class="mono">${fmt(p.reach)}</td><td class="mono">${fmt(p.view)}</td><td class="mono">${fmt(p.interactions)}</td><td class="mono" style="color:${p.leads>0?'var(--purple)':'var(--muted)'}">${p.leads||'—'}</td><td>${p.link?`<button class="post-link" onclick="openLink(this.dataset.url)" data-url="${p.link.replace(/"/g,'&quot;')}"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V7M8 1h3m0 0v3m0-3L5 7"/></svg>View</button>`:'<span style="color:var(--muted);font-size:11px">—</span>'}</td></tr>`).join('');
 }
 
 // ═══════════ CATEGORY CONTENT ═══════════
@@ -1107,11 +1134,11 @@ function renderBrand(){
   const d=filtered().filter(p=>p.brand);
   const brands=[...new Set(d.map(p=>p.brand))];
   const bData=brands.map((b,i)=>({brand:b,posts:d.filter(p=>p.brand===b).length,reach:sum(d.filter(p=>p.brand===b),'reach'),views:sum(d.filter(p=>p.brand===b),'view'),pct_reach:avg(d.filter(p=>p.brand===b),'pct_reach'),pct_eng:avg(d.filter(p=>p.brand===b),'pct_eng'),interactions:sum(d.filter(p=>p.brand===b),'interactions'),leads:sum(d.filter(p=>p.brand===b),'leads'),color:BRAND_COLORS[i%BRAND_COLORS.length]})).sort((a,b)=>b.pct_reach-a.pct_reach);
-  document.getElementById('brandKPIs').innerHTML=[{label:'Brands Tracked',val:brands.length,color:'c-ink'},{label:'Best Brand %Reach',val:(bData[0]?.pct_reach||0).toFixed(1)+'%',color:'c-teal'},{label:'Best Brand',val:bData[0]?.brand||'—',color:'c-teal'},{label:'Total Branded Reach',val:fmt(sum(d,'reach')),color:'c-blue'},{label:'Total Branded Views',val:fmt(sum(d,'view')),color:'c-blue'},{label:'Total Leads (Branded)',val:fmt(sum(d,'leads')),color:'c-purple'}].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
+  document.getElementById('brandKPIs').innerHTML=[{label:'Brands Tracked',val:brands.length,color:'c-ink'},{label:'Best Brand %Reach',val:capReach(bData[0]?.pct_reach||0).toFixed(1)+'%',color:'c-teal'},{label:'Best Brand',val:bData[0]?.brand||'—',color:'c-teal'},{label:'Total Branded Reach',val:fmt(sum(d,'reach')),color:'c-blue'},{label:'Total Branded Views',val:fmt(sum(d,'view')),color:'c-blue'},{label:'Total Leads (Branded)',val:fmt(sum(d,'leads')),color:'c-purple'}].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
   const maxBPct=bData[0]?.pct_reach||1;
-  document.getElementById('bestBrandBox').innerHTML=bData.map((b,i)=>i===0?`<div class="best-top"><span class="name">${b.brand}</span><span class="pct">${b.pct_reach.toFixed(1)}%</span></div>`:`<div class="best-row"><span class="name" style="min-width:100px">${b.brand}</span><div class="bar-wrap"><div class="bar-fill" style="width:${b.pct_reach/maxBPct*100}%;background:${b.color}"></div></div><span class="pct" style="color:${b.color}">${b.pct_reach.toFixed(1)}%</span></div>`).join('');
+  document.getElementById('bestBrandBox').innerHTML=bData.map((b,i)=>i===0?`<div class="best-top"><span class="name">${b.brand}</span><span class="pct">${capReach(b.pct_reach).toFixed(1)}%</span></div>`:`<div class="best-row"><span class="name" style="min-width:100px">${b.brand}</span><div class="bar-wrap"><div class="bar-fill" style="width:${capReach(b.pct_reach)/capReach(maxBPct)*100}%;background:${b.color}"></div></div><span class="pct" style="color:${b.color}">${capReach(b.pct_reach).toFixed(1)}%</span></div>`).join('');
   destroyChart('brandReachChart');
-  charts.brandReachChart=new Chart(document.getElementById('brandReachChart'),{type:'bar',data:{labels:bData.map(b=>b.brand),datasets:[{data:bData.map(b=>b.pct_reach),backgroundColor:bData.map(b=>b.color+'CC'),borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x.toFixed(1)+'%'}}},scales:{x:{...CD.scales.x,max:120,ticks:{...CD.scales.x.ticks,callback:v=>v+'%'}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:11}}}}}});
+  charts.brandReachChart=new Chart(document.getElementById('brandReachChart'),{type:'bar',data:{labels:bData.map(b=>b.brand),datasets:[{data:bData.map(b=>capReach(b.pct_reach)),backgroundColor:bData.map(b=>b.color+'CC'),borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x.toFixed(1)+'%'}}},scales:{x:{...CD.scales.x,max:120,ticks:{...CD.scales.x.ticks,callback:v=>v+'%'}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:11}}}}}});
   const bByEng=[...bData].sort((a,b)=>b.pct_eng-a.pct_eng);
   destroyChart('brandEngChart');
   charts.brandEngChart=new Chart(document.getElementById('brandEngChart'),{type:'bar',data:{labels:bByEng.map(b=>b.brand),datasets:[{data:bByEng.map(b=>b.pct_eng),backgroundColor:bByEng.map(b=>b.color+'BB'),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x.toFixed(1)+'%'}}},scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,callback:v=>v+'%'}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:11}}}}}});
@@ -1275,14 +1302,15 @@ function parseLeadsDate(dateStr){
 
 // ═══════════ AD SPENDING ═══════════
 function renderAds(){
-  // Legacy: kept for backward compatibility with loadSample/initBrandData
-}
-
-function renderAwn(){
-  const emptyEl=document.getElementById('awnEmpty');
-  const contentEl=document.getElementById('awnContent');
-  const tag=document.getElementById('awnDataTag');
-  if(AWN_DATA.length===0){
+  const emptyEl=document.getElementById('adsEmpty2');
+  const contentEl=document.getElementById('adsContent2');
+  const tag=document.getElementById('adsDataTag2');
+  // Migrate old-format data (no objective field)
+  if(ADS_DATA.length>0&&ADS_DATA[0].objective===undefined){
+    ADS_DATA=ADS_DATA.map(r=>({ad_name:r.ad_name||'',ad_set_name:r.ad_set||'',objective:'AWN',spend:r.spend||0,reach:r.reach||0,impressions:r.impressions||0,results:r.results||0,cpm:r.cpm||0,start:r.start||'',month:r.month||''}));
+    LS.save('ads',ADS_DATA);
+  }
+  if(!ADS_DATA||ADS_DATA.length===0){
     if(emptyEl)emptyEl.style.display='flex';
     if(contentEl)contentEl.style.display='none';
     if(tag)tag.textContent='ยังไม่มีข้อมูล';
@@ -1290,70 +1318,134 @@ function renderAwn(){
   }
   if(emptyEl)emptyEl.style.display='none';
   if(contentEl)contentEl.style.display='';
-  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('awnYtab-'+y);if(el)el.classList.toggle('active',y===activeAwnYear);});
-  const d=activeAwnYear==='all'?AWN_DATA:AWN_DATA.filter(r=>{const yr=r.start?r.start.split('-')[0]:'';return yr===activeAwnYear;});
-  if(tag)tag.textContent=`${d.length} ads · อัปเดต ${LS.date('ads_awn')||'—'}${activeAwnYear!=='all'?' · '+activeAwnYear:''}`;
-
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('adsYF-'+y);if(el)el.classList.toggle('active',y===activeAdsYearFilter);});
+  ['all','AWN','Lead'].forEach(o=>{const id='adsOF-'+(o==='all'?'all':o==='AWN'?'awn':'lead');const el=document.getElementById(id);if(el)el.classList.toggle('active',o===activeAdsObjFilter);});
+  let d=activeAdsYearFilter==='all'?ADS_DATA:ADS_DATA.filter(r=>(r.start||'').startsWith(activeAdsYearFilter));
+  if(activeAdsObjFilter!=='all')d=d.filter(r=>r.objective===activeAdsObjFilter);
+  const allMonths=MONTH_ORDER.filter(m=>ADS_DATA.some(r=>r.month===m));
+  const mSel=document.getElementById('adsMF');
+  if(mSel){
+    mSel.innerHTML='<option value="all">All Months</option>'+allMonths.map(m=>`<option value="${m}"${m===activeAdsMonthFilter?' selected':''}>${m}</option>`).join('');
+    if(activeAdsMonthFilter!=='all'&&!allMonths.includes(activeAdsMonthFilter))activeAdsMonthFilter='all';
+  }
+  if(activeAdsMonthFilter!=='all')d=d.filter(r=>r.month===activeAdsMonthFilter);
+  if(tag)tag.textContent=`${d.length} ads · อัปเดต ${LS.date('ads')||'—'}`;
   const totalSpend=d.reduce((s,r)=>s+r.spend,0);
   const totalReach=d.reduce((s,r)=>s+r.reach,0);
+  const totalResults=d.reduce((s,r)=>s+(r.results||0),0);
   const totalImp=d.reduce((s,r)=>s+r.impressions,0);
-  const cpm=totalImp>0?totalSpend/totalImp*1000:0;
-  document.getElementById('awnKPIs').innerHTML=[
+  const avgCPM=totalImp>0?totalSpend/totalImp*1000:0;
+  document.getElementById('adsKPIs2').innerHTML=[
     {label:'Total Spend',val:totalSpend.toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:0})+' ฿',color:'c-red'},
     {label:'Total Reach',val:fmt(totalReach),color:'c-teal'},
-    {label:'CPM (฿/1,000 imp)',val:cpm>0?'฿'+cpm.toFixed(0):'—',color:'c-amber'},
-    {label:'Total Impressions',val:fmt(totalImp),color:'c-blue'},
+    {label:'Total Results',val:fmt(totalResults),color:'c-amber'},
+    {label:'Avg CPM (฿/1K imp)',val:avgCPM>0?'฿'+avgCPM.toFixed(0):'—',color:'c-blue'},
   ].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
-
   const monthMap={};
   d.forEach(r=>{const m=r.month||'';if(!m)return;if(!monthMap[m])monthMap[m]={spend:0,reach:0};monthMap[m].spend+=r.spend;monthMap[m].reach+=r.reach;});
   const months=MONTH_ORDER.filter(m=>monthMap[m]);
-
-  destroyChart('awnSpendChart');
-  charts.awnSpendChart=new Chart(document.getElementById('awnSpendChart'),{type:'bar',data:{labels:months,datasets:[{data:months.map(m=>monthMap[m].spend),backgroundColor:'rgba(28,89,168,.7)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.y.toLocaleString('th-TH',{maximumFractionDigits:0})}`}}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>'฿'+fmt(v)}},x:{...CD.scales.x}}}});
-
-  destroyChart('awnReachChart');
-  charts.awnReachChart=new Chart(document.getElementById('awnReachChart'),{type:'line',data:{labels:months,datasets:[{label:'Reach',data:months.map(m=>monthMap[m].reach),borderColor:'#00A693',backgroundColor:'rgba(0,166,147,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>fmt(v)}},x:{...CD.scales.x}}}});
+  destroyChart('adsSpendChart2');
+  charts.adsSpendChart2=new Chart(document.getElementById('adsSpendChart2'),{type:'bar',data:{labels:months,datasets:[{data:months.map(m=>monthMap[m].spend),backgroundColor:months.map(m=>m.includes('2025')?'rgba(28,89,168,.7)':'rgba(192,53,28,.7)'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.y.toLocaleString('th-TH',{maximumFractionDigits:0})}`}}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>'฿'+fmt(v)}},x:{...CD.scales.x}}}});
+  destroyChart('adsReachChart2');
+  charts.adsReachChart2=new Chart(document.getElementById('adsReachChart2'),{type:'line',data:{labels:months,datasets:[{label:'Reach',data:months.map(m=>monthMap[m].reach),borderColor:'#00A693',backgroundColor:'rgba(0,166,147,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>fmt(v)}},x:{...CD.scales.x}}}});
+  const sorted=[...d].sort((a,b)=>b.spend-a.spend);
+  const tblCount=document.getElementById('adsTableCount');if(tblCount)tblCount.textContent=sorted.length+' ads';
+  document.getElementById('adsTableBody2').innerHTML=sorted.map(r=>{
+    const objTag=r.objective==='AWN'?'<span class="badge" style="background:#DCE9F8;color:#1C59A8">🔵 AWN</span>':'<span class="badge" style="background:#FAF0DC;color:#C07D10">🟠 Lead</span>';
+    return`<tr><td class="mono">${r.month||'—'}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td>${objTag}</td><td class="mono" style="text-align:right;font-weight:500">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.results>0?fmt(r.results):'—'}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`;
+  }).join('');
 }
+function renderAwn(){renderAds();}
+function renderLeadAds(){renderAds();}
 
-function renderLeadAds(){
-  const emptyEl=document.getElementById('leadAdsEmpty');
-  const contentEl=document.getElementById('leadAdsContent');
-  const tag=document.getElementById('leadAdsDataTag');
-  if(LEAD_ADS_DATA.length===0){
-    if(emptyEl)emptyEl.style.display='flex';
-    if(contentEl)contentEl.style.display='none';
-    if(tag)tag.textContent='ยังไม่มีข้อมูล';
+// ═══════════ ANALYSIS ═══════════
+function renderAnalysis(){
+  const panel=document.getElementById('page-analysis');
+  if(!panel)return;
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('anaYF-'+y);if(el)el.classList.toggle('active',y===activeAnalysisYear);});
+  const byYear=activeAnalysisYear==='all'?DATA:DATA.filter(p=>(p.date||'').startsWith(activeAnalysisYear));
+  const availMonths=MONTH_ORDER.filter(m=>byYear.some(p=>p.month===m));
+  const monthTabEl=document.getElementById('anaMonthTabs');
+  if(monthTabEl)monthTabEl.innerHTML='<span class="pchip '+(activeAnalysisMonth==='all'?'active':'')+'" onclick="setAnaMonth(\'all\')">ทุกเดือน</span>'+availMonths.map(m=>`<span class="pchip ${m===activeAnalysisMonth?'active':''}" onclick="setAnaMonth('${m}')">${m}</span>`).join('');
+  const d=activeAnalysisMonth==='all'?byYear:byYear.filter(p=>p.month===activeAnalysisMonth);
+  const anaEl=document.getElementById('anaContent');
+  if(!anaEl)return;
+  if(d.length===0){
+    anaEl.innerHTML='<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-title">ยังไม่มีข้อมูลโพสต์</div><div class="empty-state-sub">อัปโหลดข้อมูล Posts ก่อนเพื่อดู Analysis</div></div>';
     return;
   }
-  if(emptyEl)emptyEl.style.display='none';
-  if(contentEl)contentEl.style.display='';
-  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('leadYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadAdsYear);});
-  const d=activeLeadAdsYear==='all'?LEAD_ADS_DATA:LEAD_ADS_DATA.filter(r=>{const yr=r.start?r.start.split('-')[0]:'';return yr===activeLeadAdsYear;});
-  if(tag)tag.textContent=`${d.length} ads · อัปเดต ${LS.date('ads_lead')||'—'}${activeLeadAdsYear!=='all'?' · '+activeLeadAdsYear:''}`;
-
-  const totalSpend=d.reduce((s,r)=>s+r.spend,0);
-  const totalResults=d.reduce((s,r)=>s+r.results,0);
-  const cpl=totalResults>0?totalSpend/totalResults:0;
-  const totalClicks=d.reduce((s,r)=>s+r.clicks,0);
-  const totalImp=d.reduce((s,r)=>s+r.impressions,0);
-  const ctr=totalImp>0?totalClicks/totalImp*100:0;
-  document.getElementById('leadAdsKPIs').innerHTML=[
-    {label:'Total Spend',val:totalSpend.toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:0})+' ฿',color:'c-red'},
-    {label:'Total Results (Leads)',val:fmt(totalResults),color:'c-teal'},
-    {label:'CPL (฿/Lead)',val:cpl>0?'฿'+cpl.toFixed(2):'—',color:'c-amber'},
-    {label:'CTR',val:ctr>0?ctr.toFixed(2)+'%':'—',color:'c-blue'},
-  ].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
-
-  const monthMap={};
-  d.forEach(r=>{const m=r.month||'';if(!m)return;if(!monthMap[m])monthMap[m]={spend:0,results:0};monthMap[m].spend+=r.spend;monthMap[m].results+=r.results;});
-  const months=MONTH_ORDER.filter(m=>monthMap[m]);
-
-  destroyChart('leadAdsSpendChart');
-  charts.leadAdsSpendChart=new Chart(document.getElementById('leadAdsSpendChart'),{type:'bar',data:{labels:months,datasets:[{data:months.map(m=>monthMap[m].spend),backgroundColor:'rgba(192,53,28,.7)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.y.toLocaleString('th-TH',{maximumFractionDigits:0})}`}}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>'฿'+fmt(v)}},x:{...CD.scales.x}}}});
-
-  destroyChart('leadAdsResultChart');
-  charts.leadAdsResultChart=new Chart(document.getElementById('leadAdsResultChart'),{type:'line',data:{labels:months,datasets:[{label:'Leads',data:months.map(m=>monthMap[m].results),borderColor:'#C07D10',backgroundColor:'rgba(192,125,16,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>fmt(v)}},x:{...CD.scales.x}}}});
+  const noGreet=d.filter(p=>!EXCLUDE_CATS.includes(p.cat1));
+  const avgReach=d.reduce((s,p)=>s+(p.reach||0),0)/d.length;
+  const avgPctReach=capReach(d.reduce((s,p)=>s+(p.pct_reach||0),0)/d.length);
+  const totalLeads=LEADS_DATA.length;
+  const catMap={};
+  noGreet.forEach(p=>{[p.cat1,p.cat2,p.cat3].forEach(c=>{if(!c||EXCLUDE_CATS.includes(c))return;if(!catMap[c])catMap[c]=[];catMap[c].push(p.pct_reach);});});
+  const catRanked=Object.entries(catMap).map(([c,vs])=>({cat:c,avg:vs.reduce((a,b)=>a+b,0)/vs.length})).sort((a,b)=>b.avg-a.avg);
+  const topCat=catRanked[0]?.cat||'—';
+  const topCatPct=catRanked[0]?capReach(catRanked[0].avg).toFixed(1)+'%':'—';
+  const brandPosts=d.filter(p=>p.brand);
+  const brandMap={};
+  brandPosts.forEach(p=>{if(!brandMap[p.brand])brandMap[p.brand]=[];brandMap[p.brand].push(p.pct_reach);});
+  const brandRanked=Object.entries(brandMap).map(([b,vs])=>({brand:b,avg:vs.reduce((a,b)=>a+b,0)/vs.length})).sort((a,b)=>b.avg-a.avg);
+  const topBrand=brandRanked[0]?.brand||'—';
+  const topBrandPct=brandRanked[0]?capReach(brandRanked[0].avg).toFixed(1)+'%':'—';
+  const typeMap={};
+  d.forEach(p=>{if(!typeMap[p.type])typeMap[p.type]=[];typeMap[p.type].push(p.pct_reach);});
+  const typeRanked=Object.entries(typeMap).map(([t,vs])=>({type:t,avg:vs.reduce((a,b)=>a+b,0)/vs.length,count:vs.length})).sort((a,b)=>b.avg-a.avg);
+  const bestType=typeRanked[0]?.type||'—';
+  const worstType=typeRanked[typeRanked.length-1]?.type||'—';
+  const avgEng=d.reduce((s,p)=>s+(p.pct_eng||0),0)/d.length;
+  const highCats=catRanked.filter(c=>c.avg>=avgPctReach).map(c=>c.cat);
+  const lowCats=catRanked.filter(c=>c.avg<avgPctReach).map(c=>c.cat);
+  const periodLabel=activeAnalysisMonth!=='all'?activeAnalysisMonth:(activeAnalysisYear!=='all'?activeAnalysisYear:'ทั้งหมด');
+  anaEl.innerHTML=`
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-title">สรุปประสิทธิภาพ — ${periodLabel}</div>
+        <div class="kpi2-grid" style="margin-top:4px">
+          <div class="kpi2 dark"><div class="kpi2-label">หมวดหมู่ยอดนิยม</div><div class="kpi2-val" style="font-size:16px">${topCat}</div><div class="kpi2-sub">Avg %Reach ${topCatPct}</div></div>
+          <div class="kpi2 dark"><div class="kpi2-label">แบรนด์ที่ดีที่สุด</div><div class="kpi2-val" style="font-size:16px">${topBrand}</div><div class="kpi2-sub">Avg %Reach ${topBrandPct}</div></div>
+          <div class="kpi2 light"><div class="kpi2-label">Avg Reach / โพสต์</div><div class="kpi2-val">${fmt(Math.round(avgReach))}</div><div class="kpi2-sub">${d.length} โพสต์ทั้งหมด</div></div>
+          <div class="kpi2 light"><div class="kpi2-label">Total Leads (CRM)</div><div class="kpi2-val">${fmt(totalLeads)}</div><div class="kpi2-sub">จากทุก Channel</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Content Type Performance</div>
+        ${typeRanked.map(t=>`<div class="best-row" style="margin-bottom:6px"><span class="name" style="min-width:110px">${t.type}</span><div class="bar-wrap"><div class="bar-fill" style="width:${typeRanked[0].avg>0?capReach(t.avg)/capReach(typeRanked[0].avg)*100:0}%"></div></div><span class="pct">${capReach(t.avg).toFixed(1)}%</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="grid-3b">
+      <div class="card" style="border-top:3px solid var(--teal)">
+        <div class="card-title">✅ สิ่งที่ได้ผลดี</div>
+        <ul style="padding-left:18px;line-height:2.1;margin-top:4px">
+          ${highCats.length>0?`<li>หมวด <strong>${highCats.slice(0,3).join(', ')}</strong> มี %Reach สูงกว่าค่าเฉลี่ย (${avgPctReach.toFixed(1)}%)</li>`:'<li>ทุกหมวดอยู่ในเกณฑ์ดี</li>'}
+          ${typeRanked.length>0?`<li>รูปแบบ <strong>${bestType}</strong> ให้ %Reach สูงสุด (${capReach(typeRanked[0].avg).toFixed(1)}%)</li>`:''}
+          ${topBrand!=='—'?`<li>แบรนด์ <strong>${topBrand}</strong> มีประสิทธิภาพสูงสุด (${topBrandPct})</li>`:''}
+          ${avgEng>1?`<li>Engagement Rate เฉลี่ย ${avgEng.toFixed(1)}% อยู่ในเกณฑ์ดี</li>`:''}
+          ${d.filter(p=>p.reach>100000).length>0?`<li>มี ${d.filter(p=>p.reach>100000).length} โพสต์ที่ Reach เกิน 100K</li>`:''}
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--red)">
+        <div class="card-title">❌ สิ่งที่ต้องปรับปรุง</div>
+        <ul style="padding-left:18px;line-height:2.1;margin-top:4px">
+          ${lowCats.length>0?`<li>หมวด <strong>${lowCats.slice(0,3).join(', ')}</strong> มี %Reach ต่ำกว่าค่าเฉลี่ย</li>`:'<li>ทุกหมวดอยู่ในเกณฑ์ดี</li>'}
+          ${typeRanked.length>1?`<li>รูปแบบ <strong>${worstType}</strong> มี %Reach ต่ำที่สุด (${capReach(typeRanked[typeRanked.length-1].avg).toFixed(1)}%)</li>`:''}
+          ${avgEng<=1?`<li>Engagement Rate เฉลี่ย ${avgEng.toFixed(1)}% ควรเพิ่มการกระตุ้น interaction</li>`:''}
+          ${totalLeads===0?`<li>ยังไม่มี Lead จาก CRM — ควรเพิ่มการติดตาม</li>`:''}
+          ${brandPosts.length<d.length*0.5?`<li>โพสต์ที่ไม่ tag แบรนด์มีจำนวนมาก — ควรระบุ Brand ให้ครบ</li>`:''}
+        </ul>
+      </div>
+      <div class="card" style="border-top:3px solid var(--amber)">
+        <div class="card-title">💡 Recommended Next Steps</div>
+        <ol style="padding-left:18px;line-height:2.1;margin-top:4px">
+          <li>เพิ่มโพสต์หมวด <strong>${topCat}</strong> ให้มากขึ้น เนื่องจาก Reach สูงสุด</li>
+          <li>ผลิต content รูปแบบ <strong>${bestType}</strong> ต่อเนื่อง เพราะ %Reach ดีที่สุด</li>
+          ${topBrand!=='—'?`<li>ขยาย story ของ <strong>${topBrand}</strong> ผ่าน multi-format</li>`:`<li>เพิ่มการ tag Brand ในโพสต์เพื่อติดตาม performance</li>`}
+          ${lowCats.length>0?`<li>ทบทวน strategy สำหรับหมวด <strong>${lowCats.slice(0,2).join(', ')}</strong> — ลอง format ใหม่</li>`:`<li>รักษาระดับ %Reach ที่ดีโดย post สม่ำเสมอ</li>`}
+          <li>ติดตาม Lead ใน CRM สม่ำเสมอเพื่อปิด conversion จาก organic reach</li>
+        </ol>
+      </div>
+    </div>`;
 }
 
 // ═══════════ DATA EDITOR ═══════════
@@ -1385,12 +1477,12 @@ function editorSetType(t){
 
 function renderEditor(){
   // sync tab active state
-  ['posts','leads','ads_awn','ads_lead','notes'].forEach(t=>{
+  ['posts','leads','ads','notes'].forEach(t=>{
     const el=document.getElementById('editorTab-'+t);
     if(el)el.classList.toggle('active',t===editorType);
   });
   const badge=document.getElementById('editorBadge');
-  const counts={posts:DATA.length,leads:LEADS_DATA.length,ads:ADS_DATA.length,ads_awn:AWN_DATA.length,ads_lead:LEAD_ADS_DATA.length,notes:Object.keys(NOTES_DATA).length};
+  const counts={posts:DATA.length,leads:LEADS_DATA.length,ads:ADS_DATA.length,notes:Object.keys(NOTES_DATA).length};
   if(badge)badge.textContent=`${counts[editorType]} ${editorType} · ${activeBrand.toUpperCase()}`;
   const chkAll=document.getElementById('editorSelectAll');
   if(chkAll){chkAll.checked=false;chkAll.indeterminate=false;}
@@ -1432,33 +1524,21 @@ function renderEditor(){
       <td contenteditable="true" data-field="est_qty"    class="mono editor-cell">${l.est_qty||''}</td>
       <td contenteditable="true" data-field="notes"      class="editor-cell" style="font-size:11px">${l.notes||''}</td>
     </tr>`).join('');
-  } else if(editorType==='ads_awn'){
-    if(badge)badge.textContent=`${AWN_DATA.length} AWN ads · ${activeBrand.toUpperCase()}`;
-    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Ad Name</th><th>Spend (THB)</th><th>Reach</th><th>Impressions</th><th>CPM</th><th>Start Date</th><th>Month</th></tr>`;
-    tbody.innerHTML=AWN_DATA.map((r,i)=>`<tr data-idx="${i}">
+  } else if(editorType==='ads'){
+    if(badge)badge.textContent=`${ADS_DATA.length} ads · ${activeBrand.toUpperCase()}`;
+    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Ad Name</th><th>Ad Set</th><th>Objective</th><th>Spend (THB)</th><th>Results</th><th>Reach</th><th>Impressions</th><th>CPM</th><th>Start Date</th><th>Month</th></tr>`;
+    tbody.innerHTML=ADS_DATA.map((r,i)=>`<tr data-idx="${i}">
       <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
       <td contenteditable="true" data-field="ad_name"     class="editor-cell">${r.ad_name||''}</td>
+      <td contenteditable="true" data-field="ad_set_name" class="editor-cell">${r.ad_set_name||''}</td>
+      <td contenteditable="true" data-field="objective"   class="editor-cell">${r.objective||'AWN'}</td>
       <td contenteditable="true" data-field="spend"       class="mono editor-cell">${r.spend||0}</td>
+      <td contenteditable="true" data-field="results"     class="mono editor-cell">${r.results||0}</td>
       <td contenteditable="true" data-field="reach"       class="mono editor-cell">${r.reach||0}</td>
       <td contenteditable="true" data-field="impressions" class="mono editor-cell">${r.impressions||0}</td>
       <td contenteditable="true" data-field="cpm"         class="mono editor-cell">${r.cpm||0}</td>
       <td contenteditable="true" data-field="start"       class="mono editor-cell">${r.start||''}</td>
       <td contenteditable="true" data-field="month"       class="editor-cell">${r.month||''}</td>
-    </tr>`).join('');
-  } else if(editorType==='ads_lead'){
-    if(badge)badge.textContent=`${LEAD_ADS_DATA.length} Lead ads · ${activeBrand.toUpperCase()}`;
-    if(thead)thead.innerHTML=`<tr><th style="width:30px"><input type="checkbox" id="editorSelectAll" onchange="editorToggleAll(this)"></th><th>Ad Name</th><th>Spend (THB)</th><th>Results</th><th>CPL (Cost/Lead)</th><th>CTR (%)</th><th>Reach</th><th>Impressions</th><th>Start Date</th><th>Month</th></tr>`;
-    tbody.innerHTML=LEAD_ADS_DATA.map((r,i)=>`<tr data-idx="${i}">
-      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
-      <td contenteditable="true" data-field="ad_name"         class="editor-cell">${r.ad_name||''}</td>
-      <td contenteditable="true" data-field="spend"           class="mono editor-cell">${r.spend||0}</td>
-      <td contenteditable="true" data-field="results"         class="mono editor-cell">${r.results||0}</td>
-      <td contenteditable="true" data-field="cost_per_result" class="mono editor-cell">${r.cost_per_result||0}</td>
-      <td contenteditable="true" data-field="ctr"             class="mono editor-cell">${r.ctr||0}</td>
-      <td contenteditable="true" data-field="reach"           class="mono editor-cell">${r.reach||0}</td>
-      <td contenteditable="true" data-field="impressions"     class="mono editor-cell">${r.impressions||0}</td>
-      <td contenteditable="true" data-field="start"           class="mono editor-cell">${r.start||''}</td>
-      <td contenteditable="true" data-field="month"           class="editor-cell">${r.month||''}</td>
     </tr>`).join('');
   } else if(editorType==='notes'){
     const months=[...new Set(DATA.map(p=>p.month).filter(Boolean))].sort((a,b)=>MONTH_ORDER.indexOf(a)-MONTH_ORDER.indexOf(b));
@@ -1542,28 +1622,19 @@ function editorAddRow(){
       <td contenteditable="true" data-field="est_value"  class="mono editor-cell"></td>
       <td contenteditable="true" data-field="est_qty"    class="mono editor-cell"></td>
       <td contenteditable="true" data-field="notes"      class="editor-cell"></td>`;
-  } else if(editorType==='ads_awn'){
+  } else if(editorType==='ads'){
     tr.innerHTML=`
       <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
       <td contenteditable="true" data-field="ad_name"     class="editor-cell"></td>
+      <td contenteditable="true" data-field="ad_set_name" class="editor-cell"></td>
+      <td contenteditable="true" data-field="objective"   class="editor-cell">AWN</td>
       <td contenteditable="true" data-field="spend"       class="mono editor-cell">0</td>
+      <td contenteditable="true" data-field="results"     class="mono editor-cell">0</td>
       <td contenteditable="true" data-field="reach"       class="mono editor-cell">0</td>
       <td contenteditable="true" data-field="impressions" class="mono editor-cell">0</td>
       <td contenteditable="true" data-field="cpm"         class="mono editor-cell">0</td>
       <td contenteditable="true" data-field="start"       class="mono editor-cell"></td>
       <td contenteditable="true" data-field="month"       class="editor-cell"></td>`;
-  } else if(editorType==='ads_lead'){
-    tr.innerHTML=`
-      <td style="text-align:center;padding:6px 8px"><input type="checkbox" class="editor-chk" style="cursor:pointer;width:14px;height:14px" onchange="editorRowCheck(this)"></td>
-      <td contenteditable="true" data-field="ad_name"         class="editor-cell"></td>
-      <td contenteditable="true" data-field="spend"           class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="results"         class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="cost_per_result" class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="ctr"             class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="reach"           class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="impressions"     class="mono editor-cell">0</td>
-      <td contenteditable="true" data-field="start"           class="mono editor-cell"></td>
-      <td contenteditable="true" data-field="month"           class="editor-cell"></td>`;
   }
   tbody.appendChild(tr);
   tr.scrollIntoView({block:'nearest'});
@@ -1602,33 +1673,19 @@ function editorSaveChanges(){
     renderLeads();
     renderEditor();
     if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${LEADS_DATA.length} leads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${LEADS_DATA.length} leads · ${activeBrand.toUpperCase()}`;},2500);}
-  } else if(editorType==='ads_awn'){
-    const g=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim():'';}
+  } else if(editorType==='ads'){
     const newData=rows.map(tr=>{
-      const gtr=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
+      const gtr=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
       const start=gtr('start');
       const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       let month=gtr('month');
       if(!month&&start){try{const[y,m]=start.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
-      return{ad_name:gtr('ad_name'),spend:parseFloat(gtr('spend'))||0,reach:parseInt(gtr('reach'))||0,impressions:parseInt(gtr('impressions'))||0,cpm:parseFloat(gtr('cpm'))||0,start,month};
+      return{ad_name:gtr('ad_name'),ad_set_name:gtr('ad_set_name'),objective:gtr('objective')||'AWN',spend:parseFloat(gtr('spend'))||0,results:parseFloat(gtr('results'))||0,reach:parseInt(gtr('reach'))||0,impressions:parseInt(gtr('impressions'))||0,cpm:parseFloat(gtr('cpm'))||0,start,month};
     }).filter(r=>r.ad_name||r.spend);
-    AWN_DATA=newData;
-    LS.save('ads_awn',AWN_DATA);
-    renderAwn();renderEditor();
-    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${AWN_DATA.length} AWN ads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${AWN_DATA.length} AWN ads · ${activeBrand.toUpperCase()}`;},2500);}
-  } else if(editorType==='ads_lead'){
-    const newData=rows.map(tr=>{
-      const gtr=f=>{const el=tr.querySelector(`[data-field="${f}"]`);return el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';}
-      const start=gtr('start');
-      const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      let month=gtr('month');
-      if(!month&&start){try{const[y,m]=start.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
-      return{ad_name:gtr('ad_name'),spend:parseFloat(gtr('spend'))||0,results:parseFloat(gtr('results'))||0,cost_per_result:parseFloat(gtr('cost_per_result'))||0,ctr:parseFloat(gtr('ctr'))||0,reach:parseInt(gtr('reach'))||0,impressions:parseInt(gtr('impressions'))||0,msg_contacts:0,clicks:0,start,month};
-    }).filter(r=>r.ad_name||r.spend);
-    LEAD_ADS_DATA=newData;
-    LS.save('ads_lead',LEAD_ADS_DATA);
-    renderLeadAds();renderEditor();
-    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${LEAD_ADS_DATA.length} Lead ads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${LEAD_ADS_DATA.length} Lead ads · ${activeBrand.toUpperCase()}`;},2500);}
+    ADS_DATA=newData;
+    LS.save('ads',ADS_DATA);
+    renderAds();renderEditor();
+    if(badge){badge.style.color='var(--teal2)';badge.textContent=`✅ บันทึกแล้ว ${ADS_DATA.length} ads`;setTimeout(()=>{badge.style.color='';badge.textContent=`${ADS_DATA.length} ads · ${activeBrand.toUpperCase()}`;},2500);}
   } else if(editorType==='notes'){
     NOTES_DATA=editorNotesFromTbody();
     LS.save('notes',NOTES_DATA);
@@ -1647,12 +1704,9 @@ function editorExportCSV(){
   } else if(editorType==='leads'){
     headers=['Date','Customer','Channel','Product Category','Stage','Contact Person','Est.Value','Est.Qty','Notes'];
     rows=LEADS_DATA.map(l=>[[l.date||''],[l.customer||''],[l.channel||''],[l.product_cat||''],[l.stage||''],[l.contact_person||''],[l.est_value||''],[l.est_qty||''],[l.notes||'']].flat());
-  } else if(editorType==='ads_awn'){
-    headers=['Ad Name','Spend (THB)','Reach','Impressions','CPM','Start Date','Month'];
-    rows=AWN_DATA.map(r=>[r.ad_name||'',r.spend||0,r.reach||0,r.impressions||0,r.cpm||0,r.start||'',r.month||'']);
-  } else if(editorType==='ads_lead'){
-    headers=['Ad Name','Spend (THB)','Results','CPL','CTR (%)','Reach','Impressions','Start Date','Month'];
-    rows=LEAD_ADS_DATA.map(r=>[r.ad_name||'',r.spend||0,r.results||0,r.cost_per_result||0,r.ctr||0,r.reach||0,r.impressions||0,r.start||'',r.month||'']);
+  } else if(editorType==='ads'){
+    headers=['Ad Name','Ad Set','Objective','Spend (THB)','Results','Reach','Impressions','CPM','Start Date','Month'];
+    rows=ADS_DATA.map(r=>[r.ad_name||'',r.ad_set_name||'',r.objective||'AWN',r.spend||0,r.results||0,r.reach||0,r.impressions||0,r.cpm||0,r.start||'',r.month||'']);
   } else if(editorType==='notes'){
     headers=['Month','Note'];
     rows=Object.entries(NOTES_DATA).map(([m,n])=>[m,n]);
