@@ -152,7 +152,8 @@ tr:hover td{background:#FAFAF7}
 #editorTable th{position:sticky;top:88px;z-index:2}
 .editor-hint{font-size:11px;color:var(--muted);font-style:italic}
 footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);font-family:'DM Mono',monospace}
-#page-leads.leads-empty .panel-year-bar,#page-leads.leads-empty .kpi-strip,#page-leads.leads-empty .grid-2,#page-leads.leads-empty > .card{display:none}
+#page-crm.crm-empty .panel-year-bar,#page-crm.crm-empty .kpi-strip,#page-crm.crm-empty .grid-2,#page-crm.crm-empty > .card{display:none}
+#page-leads.leads-empty .panel-year-bar,#page-leads.leads-empty .kpi-strip{display:none}
 #page-ads.ads-empty .panel-year-bar,#page-ads.ads-empty .kpi-strip,#page-ads.ads-empty .grid-2,#page-ads.ads-empty > .card{display:none}
 </style>
 </head>
@@ -173,7 +174,8 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="ntab" onclick="showPage('content')">Content Performance</div>
     <div class="ntab" onclick="showPage('category')">Category Content</div>
     <div class="ntab" onclick="showPage('brand')">Brand Performance</div>
-    <div class="ntab" onclick="showPage('leads')">Leads &amp; CRM</div>
+    <div class="ntab" onclick="showPage('leads')">📋 Leads</div>
+    <div class="ntab" onclick="showPage('crm')">🤝 CRM</div>
     <div class="ntab" onclick="showPage('ads')">Ad Spending</div>
     <div class="ntab" onclick="showPage('editor')">Data Editor</div>
     <div class="ntab" onclick="showPage('analysis')">📊 Analysis</div>
@@ -302,20 +304,60 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   </div>
 </div>
 
-<!-- ═══ LEADS & CRM PANEL ═══ -->
+<!-- ═══ LEADS (from Ad Spending) PANEL ═══ -->
 <div class="panel" id="page-leads">
   <div style="height:16px"></div>
   <div class="panel-upload-bar">
-    <span class="pub-label">Leads &amp; CRM</span>
+    <span class="pub-label">📋 Leads</span>
+    <span style="font-size:11px;color:var(--muted)">ข้อมูลจากไฟล์ Ad Spending · อัปโหลดที่แท็บ Ad Spending</span>
+    <span class="pub-tag" id="leadsAdsDataTag"></span>
+  </div>
+  <div id="leadsAdsEmpty" class="empty-state" style="display:none">
+    <div class="empty-state-icon">📋</div>
+    <div class="empty-state-title">ยังไม่มีข้อมูล Leads</div>
+    <div class="empty-state-sub">อัปโหลดไฟล์ Ad Spending ที่แท็บ "💰 Ad Spending" ให้มีแถว Ad Objective = "Lead (Chat message)"</div>
+    <div class="empty-state-btns">
+      <button class="es-btn es-btn-fill" onclick="showPage('ads')">ไปที่ Ad Spending</button>
+    </div>
+  </div>
+  <div id="leadsAdsContent" style="display:none">
+    <div class="panel-year-bar">
+      <span class="period-label">Year</span>
+      <span class="pchip active" id="leadsAdsYtab-all"  onclick="setLeadsAdsYear('all')">All</span>
+      <span class="pchip"        id="leadsAdsYtab-2025" onclick="setLeadsAdsYear('2025')">2025</span>
+      <span class="pchip"        id="leadsAdsYtab-2026" onclick="setLeadsAdsYear('2026')">2026</span>
+    </div>
+    <div class="kpi-strip" id="leadsAdsKPIs"></div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="card"><div class="card-title">Monthly Lead Count</div><canvas id="leadsAdsMonthChart" height="240"></canvas></div>
+      <div class="card"><div class="card-title">Lead Spend by Month (฿)</div><canvas id="leadsAdsSpendChart" height="240"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Lead Ad Detail <span id="leadsAdsTableCount"></span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Month</th><th>Ad Set</th><th>Ad Name</th><th style="text-align:right">Results</th><th style="text-align:right">Spend (฿)</th><th style="text-align:right">CPM</th><th style="text-align:right">Reach</th></tr></thead>
+          <tbody id="leadsAdsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CRM PANEL ═══ -->
+<div class="panel" id="page-crm">
+  <div style="height:16px"></div>
+  <div class="panel-upload-bar">
+    <span class="pub-label">🤝 CRM</span>
     <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
     <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
     <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleLeads()">▶ Load Sample</button>
-    <span class="pub-tag" id="leadsDataTag"></span>
+    <span class="pub-tag" id="crmDataTag"></span>
   </div>
-  <div id="leadsEmpty" class="empty-state" style="display:none">
-    <div class="empty-state-icon">📋</div>
-    <div class="empty-state-title">ยังไม่มีข้อมูล Leads &amp; CRM</div>
-    <div class="empty-state-sub">กรุณาอัปโหลดไฟล์ CSV ของ Leads หรือกด Load Sample เพื่อดูตัวอย่าง</div>
+  <div id="crmEmpty" class="empty-state" style="display:none">
+    <div class="empty-state-icon">🤝</div>
+    <div class="empty-state-title">ยังไม่มีข้อมูล CRM</div>
+    <div class="empty-state-sub">กรุณาอัปโหลดไฟล์ CSV ของ Tracking หรือกด Load Sample เพื่อดูตัวอย่าง</div>
     <div class="empty-state-btns">
       <button class="es-btn es-btn-fill" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
       <button class="es-btn es-btn-out"  onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
@@ -324,35 +366,34 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   </div>
   <div class="panel-year-bar">
     <span class="period-label">Year</span>
-    <span class="pchip active" id="leadsYtab-all"  onclick="setLeadsYear('all')">All</span>
-    <span class="pchip"        id="leadsYtab-2025" onclick="setLeadsYear('2025')">2025</span>
-    <span class="pchip"        id="leadsYtab-2026" onclick="setLeadsYear('2026')">2026</span>
+    <span class="pchip active" id="crmYtab-all"  onclick="setCrmYear('all')">All</span>
+    <span class="pchip"        id="crmYtab-2025" onclick="setCrmYear('2025')">2025</span>
+    <span class="pchip"        id="crmYtab-2026" onclick="setCrmYear('2026')">2026</span>
   </div>
-  <div class="kpi-strip" id="leadsKPIs"></div>
+  <div class="kpi-strip" id="crmKPIs"></div>
   <div class="grid-2">
     <div class="card">
       <div class="card-title">Pipeline Funnel</div>
-      <div class="funnel-wrap" id="leadsFunnel"></div>
+      <div class="funnel-wrap" id="crmFunnel"></div>
     </div>
     <div class="card">
       <div class="card-title">BU Destination <span style="font-family:DM Sans;font-size:10px;font-weight:400;color:var(--muted)">forwarded leads</span></div>
-      <canvas id="leadsBuChart" height="180"></canvas>
+      <canvas id="crmBuChart" height="180"></canvas>
     </div>
   </div>
   <div class="grid-2">
-    <div class="card"><div class="card-title">ส่งให้ใคร (Contact Person)</div><canvas id="leadsPersonChart" height="200"></canvas></div>
-    <div class="card"><div class="card-title">Product Category Interest</div><canvas id="leadsProductChart" height="200"></canvas></div>
+    <div class="card"><div class="card-title">ส่งให้ใคร (Contact Person)</div><canvas id="crmPersonChart" height="200"></canvas></div>
+    <div class="card"><div class="card-title">Product Category Interest</div><canvas id="crmProductChart" height="200"></canvas></div>
   </div>
   <div class="grid-2">
-    <div class="card"><div class="card-title">Monthly Lead Volume</div><canvas id="leadsMonthChart" height="180"></canvas></div>
-    <div class="card"><div class="card-title">Lead Source (Channel)</div><canvas id="leadsChannelChart" height="180"></canvas></div>
+    <div class="card"><div class="card-title">Monthly Lead Volume</div><canvas id="crmMonthChart" height="180"></canvas></div>
+    <div class="card"><div class="card-title">Lead Source (Channel)</div><canvas id="crmChannelChart" height="180"></canvas></div>
   </div>
-  <div id="leadAdsSection"></div>
   <div class="card" style="margin-bottom:0">
-    <div class="card-title">Lead Detail <span id="leadsTableCount"></span></div>
+    <div class="card-title">Lead Detail <span id="crmTableCount"></span></div>
     <div class="tbl-wrap">
       <table><thead><tr><th>Date</th><th>Customer</th><th>Channel</th><th>Product Category</th><th>Stage</th><th>Contact Person</th><th>Est. Qty</th><th>Est. Value</th><th>Notes</th></tr></thead>
-      <tbody id="leadsTable"></tbody></table>
+      <tbody id="crmTable"></tbody></table>
     </div>
   </div>
 </div>
@@ -481,6 +522,7 @@ let AWN_DATA=[];
 let LEAD_ADS_DATA=[];
 let NOTES_DATA={};
 let activeLeadsYear='all';
+let activeLeadsAdsYear='all';
 let activeAdsYear='all';
 let activeAwnYear='all';
 let activeLeadAdsYear='all';
@@ -533,6 +575,7 @@ function initBrandData(){
   LEAD_ADS_DATA=LS.load('ads_lead')||[];
   NOTES_DATA=LS.load('notes')||{};
   activeLeadsYear='all';
+  activeLeadsAdsYear='all';
   activeAdsYear='all';
   activeAwnYear='all';
   activeLeadAdsYear='all';
@@ -543,10 +586,9 @@ function initBrandData(){
   }else{
     DATA=[];updateBadge();showEmptyState();
   }
-  renderLeads();
+  renderLeadsAds();
+  renderCrm();
   renderAds();
-  renderAwn();
-  renderLeadAds();
   renderEditor();
 }
 
@@ -682,6 +724,8 @@ function parseUnifiedAdsRow(r){
     if(mdy){const[,m,d,y]=mdy;start=`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;month=mo[parseInt(m)-1]+' '+y;}
     else{try{const[y,m]=rawDate.split('-');const mi=parseInt(m)-1;if(mi>=0&&mi<12)month=mo[mi]+' '+y;}catch(e){}}
   }
+  // Use explicit Year+Month columns if present (new cumulative file format)
+  if(r['Year']&&r['Month']){const yr=String(parseInt(r['Year'])||'');const mn=String(r['Month']).trim();if(yr&&mn&&mn.length>=2)month=mn+' '+yr;}
   const objRaw=String(r['Ad Objective']||r['Objective']||'');
   const objective=objRaw.toLowerCase().includes('awareness')?'AWN':'Lead';
   return{
@@ -999,7 +1043,8 @@ function setTag(msg){document.getElementById('footerNote').textContent='NYTG Das
 
 // ═══════════ YEAR FILTER ═══════════
 function setYear(y){activeYear=y;activePeriod='all';['all','2025','2026'].forEach(id=>document.getElementById('ytab-'+id).classList.toggle('active',id===y));renderAll();}
-function setLeadsYear(y){activeLeadsYear=y;renderLeads();}
+function setCrmYear(y){activeLeadsYear=y;renderCrm();}
+function setLeadsAdsYear(y){activeLeadsAdsYear=y;renderLeadsAds();}
 function setAdsYear(y){activeAdsYearFilter=y;renderAds();}
 function setAwnYear(y){activeAwnYear=y;renderAds();}
 function setLeadAdsYear(y){activeLeadAdsYear=y;renderAds();}
@@ -1022,7 +1067,7 @@ function filtered(){const base=yearFiltered(DATA);return activePeriod==='all'?ba
 
 // ═══════════ PAGE SWITCH ═══════════
 function showPage(p){
-  const pages=['exec','content','category','brand','leads','ads','editor','analysis'];
+  const pages=['exec','content','category','brand','leads','crm','ads','editor','analysis'];
   document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('active',pages[i]===p));
   const postsTabs=['exec','content','category','brand'];
   const hasData=DATA.length>0;
@@ -1038,6 +1083,8 @@ function showPage(p){
   document.getElementById('page-'+p).classList.add('active');
   if(p==='editor')renderEditor();
   if(p==='analysis')renderAnalysis();
+  if(p==='leads')renderLeadsAds();
+  if(p==='crm')renderCrm();
 }
 
 function renderAll(){buildPeriodBar();renderExec();renderContent();renderCategory();renderBrand();}
@@ -1151,9 +1198,9 @@ function renderBrand(){
 }
 
 // ═══════════ LEADS & CRM ═══════════
-function renderLeads(){
+function renderCrm(){
   // sync year tab UI
-  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('leadsYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadsYear);});
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('crmYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadsYear);});
 
   const brandFilter=activeBrand==='nytg'?'FB-NYTG':'FB-NIC';
   const byBrand=LEADS_DATA.filter(l=>!l.channel||l.channel===brandFilter||l.channel==='');
@@ -1161,12 +1208,12 @@ function renderLeads(){
     const parts=l.date?l.date.split('/'):[]; return parts.length===3&&parts[2]===activeLeadsYear;
   });
 
-  document.getElementById('page-leads').classList.toggle('leads-empty',LEADS_DATA.length===0);
-  const leadsEmptyEl=document.getElementById('leadsEmpty');
+  document.getElementById('page-crm').classList.toggle('crm-empty',LEADS_DATA.length===0);
+  const leadsEmptyEl=document.getElementById('crmEmpty');
   if(leadsEmptyEl)leadsEmptyEl.style.display=LEADS_DATA.length===0?'flex':'none';
-  if(LEADS_DATA.length===0){document.getElementById('leadsDataTag').textContent='ยังไม่มีข้อมูล';return;}
+  if(LEADS_DATA.length===0){document.getElementById('crmDataTag').textContent='ยังไม่มีข้อมูล';return;}
 
-  document.getElementById('leadsDataTag').textContent=`${LEADS_DATA.length} leads · อัปเดต ${LS.date('leads')||'—'}${activeLeadsYear!=='all'?' · '+activeLeadsYear:''}`;
+  document.getElementById('crmDataTag').textContent=`${LEADS_DATA.length} leads · อัปเดต ${LS.date('leads')||'—'}${activeLeadsYear!=='all'?' · '+activeLeadsYear:''}`;
 
   const total=d.length;
   const qualify=d.filter(l=>l.stage==='Qualify Lead').length;
@@ -1178,7 +1225,7 @@ function renderLeads(){
   const estVals=d.filter(l=>l.est_value&&l.est_value!=='Not yet'&&l.est_value!=='').map(l=>parseFloat(l.est_value.replace(/[^0-9.]/g,''))||0).filter(v=>v>0);
   const totalEst=estVals.reduce((a,b)=>a+b,0);
 
-  document.getElementById('leadsKPIs').innerHTML=[
+  document.getElementById('crmKPIs').innerHTML=[
     {label:'Total Leads',val:total,color:'c-ink'},
     {label:'Qualify Lead',val:qualify,color:'c-amber'},
     {label:'Forwarded to BU',val:forwarded,color:'c-teal'},
@@ -1197,7 +1244,7 @@ function renderLeads(){
     {label:'  ↳ Land to TC',count:toTC,color:'#00838F'},
     {label:'Closed - Not Interested',count:closed,color:'#C0351C'},
   ];
-  document.getElementById('leadsFunnel').innerHTML=fStages.map(s=>`
+  document.getElementById('crmFunnel').innerHTML=fStages.map(s=>`
     <div class="funnel-row">
       <div class="funnel-label">${s.label}</div>
       <div class="funnel-track">
@@ -1214,28 +1261,28 @@ function renderLeads(){
     {bu:'Vel',count:toVel,color:'#6840B0'},
     {bu:'TC',count:toTC,color:'#00838F'},
   ].filter(x=>x.count>0);
-  destroyChart('leadsBuChart');
+  destroyChart('crmBuChart');
   if(buData.length>0){
-    charts.leadsBuChart=new Chart(document.getElementById('leadsBuChart'),{type:'bar',data:{labels:buData.map(x=>x.bu),datasets:[{data:buData.map(x=>x.count),backgroundColor:buData.map(x=>x.color+'CC'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
+    charts.leadsBuChart=new Chart(document.getElementById('crmBuChart'),{type:'bar',data:{labels:buData.map(x=>x.bu),datasets:[{data:buData.map(x=>x.count),backgroundColor:buData.map(x=>x.color+'CC'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
   }
 
   // Contact person chart
   const personMap={};
   d.filter(l=>l.contact_person).forEach(l=>{personMap[l.contact_person]=(personMap[l.contact_person]||0)+1;});
   const personData=Object.entries(personMap).sort((a,b)=>b[1]-a[1]);
-  destroyChart('leadsPersonChart');
+  destroyChart('crmPersonChart');
   if(personData.length>0){
     const pColors=['#1C59A8','#00A693','#6840B0','#C07D10','#C0351C'];
-    charts.leadsPersonChart=new Chart(document.getElementById('leadsPersonChart'),{type:'bar',data:{labels:personData.map(([k])=>k),datasets:[{data:personData.map(([,v])=>v),backgroundColor:personData.map((_,i)=>pColors[i%pColors.length]+'CC'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
+    charts.leadsPersonChart=new Chart(document.getElementById('crmPersonChart'),{type:'bar',data:{labels:personData.map(([k])=>k),datasets:[{data:personData.map(([,v])=>v),backgroundColor:personData.map((_,i)=>pColors[i%pColors.length]+'CC'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
   }
 
   // Product category chart
   const prodMap={};
   d.filter(l=>l.product_cat&&l.product_cat!=='').forEach(l=>{const k=l.product_cat.length>20?l.product_cat.substring(0,20)+'…':l.product_cat;prodMap[k]=(prodMap[k]||0)+1;});
   const prodData=Object.entries(prodMap).sort((a,b)=>b[1]-a[1]);
-  destroyChart('leadsProductChart');
+  destroyChart('crmProductChart');
   if(prodData.length>0){
-    charts.leadsProductChart=new Chart(document.getElementById('leadsProductChart'),{type:'bar',data:{labels:prodData.map(([k])=>k),datasets:[{data:prodData.map(([,v])=>v),backgroundColor:'rgba(0,166,147,.7)',borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,stepSize:1}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:10}}}}}});
+    charts.leadsProductChart=new Chart(document.getElementById('crmProductChart'),{type:'bar',data:{labels:prodData.map(([k])=>k),datasets:[{data:prodData.map(([,v])=>v),backgroundColor:'rgba(0,166,147,.7)',borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,stepSize:1}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:10}}}}}});
   }
 
   // Monthly volume
@@ -1245,9 +1292,9 @@ function renderLeads(){
     if(m)monthMap[m]=(monthMap[m]||0)+1;
   });
   const sortedMonths=Object.keys(monthMap).sort((a,b)=>new Date('01 '+a)-new Date('01 '+b));
-  destroyChart('leadsMonthChart');
+  destroyChart('crmMonthChart');
   if(sortedMonths.length>0){
-    charts.leadsMonthChart=new Chart(document.getElementById('leadsMonthChart'),{type:'bar',data:{labels:sortedMonths,datasets:[{data:sortedMonths.map(m=>monthMap[m]),backgroundColor:'rgba(28,89,168,.65)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,maxRotation:35}}}}});
+    charts.leadsMonthChart=new Chart(document.getElementById('crmMonthChart'),{type:'bar',data:{labels:sortedMonths,datasets:[{data:sortedMonths.map(m=>monthMap[m]),backgroundColor:'rgba(28,89,168,.65)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,maxRotation:35}}}}});
   }
 
   // Channel chart (NYTG vs NIC) — use year-filtered but brand-unfiltered data for full split view
@@ -1255,9 +1302,9 @@ function renderLeads(){
   const chMap={};
   chBase.forEach(l=>{if(l.channel)chMap[l.channel]=(chMap[l.channel]||0)+1;});
   const chData=Object.entries(chMap).sort((a,b)=>b[1]-a[1]);
-  destroyChart('leadsChannelChart');
+  destroyChart('crmChannelChart');
   if(chData.length>0){
-    charts.leadsChannelChart=new Chart(document.getElementById('leadsChannelChart'),{type:'doughnut',data:{labels:chData.map(([k,v])=>`${k} (${v})`),datasets:[{data:chData.map(([,v])=>v),backgroundColor:['rgba(0,166,147,.75)','rgba(192,125,16,.75)'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}}}}});
+    charts.leadsChannelChart=new Chart(document.getElementById('crmChannelChart'),{type:'doughnut',data:{labels:chData.map(([k,v])=>`${k} (${v})`),datasets:[{data:chData.map(([,v])=>v),backgroundColor:['rgba(0,166,147,.75)','rgba(192,125,16,.75)'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}}}}});
   }
 
   // Table
@@ -1266,9 +1313,9 @@ function renderLeads(){
     const[c,bg]=map[s]||['#9B9690','#EDEAE3'];
     return`<span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:${bg};color:${c}">${s||'—'}</span>`;
   };
-  document.getElementById('leadsTableCount').textContent=d.length+' leads';
+  document.getElementById('crmTableCount').textContent=d.length+' leads';
   const tblRows=[...d].sort((a,b)=>new Date(parseLeadsDate(b.date))-new Date(parseLeadsDate(a.date)));
-  document.getElementById('leadsTable').innerHTML=tblRows.map(l=>`<tr>
+  document.getElementById('crmTable').innerHTML=tblRows.map(l=>`<tr>
     <td class="mono">${l.date}</td>
     <td style="max-width:140px;font-size:12px">${l.customer}</td>
     <td><span class="badge" style="background:${l.channel==='FB-NYTG'?'#D5F0EC':'#FAF0DC'};color:${l.channel==='FB-NYTG'?'#007A6C':'#C07D10'}">${l.channel||'—'}</span></td>
@@ -1280,20 +1327,49 @@ function renderLeads(){
     <td style="max-width:200px;font-size:11px;color:var(--muted)">${(l.notes||'').substring(0,60)+(l.notes&&l.notes.length>60?'…':'')}</td>
   </tr>`).join('');
 
-  // Lead Ads from ADS_DATA (R9)
-  const leadAdsSection=document.getElementById('leadAdsSection');
-  if(leadAdsSection){
-    const leadAds=ADS_DATA.filter(r=>r.objective==='Lead'&&(activeLeadsYear==='all'||String(r.start||'').startsWith(activeLeadsYear)));
-    if(leadAds.length===0){leadAdsSection.innerHTML='';return;}
-    const totalRes=leadAds.reduce((s,r)=>s+(r.results||0),0);
-    const totalSpend=leadAds.reduce((s,r)=>s+r.spend,0);
-    const totalReach=leadAds.reduce((s,r)=>s+r.reach,0);
-    const sortedLA=[...leadAds].sort((a,b)=>b.results-a.results);
-    leadAdsSection.innerHTML=`<div class="card" style="margin-bottom:16px">
-      <div class="card-title">Lead Ads (Ad Spending File) <span>${totalRes} leads · ฿${totalSpend.toLocaleString('th-TH',{maximumFractionDigits:0})} spend</span></div>
-      <div class="tbl-wrap"><table><thead><tr><th>Ad Set</th><th>Ad Name</th><th style="text-align:right">Results</th><th style="text-align:right">Spend (฿)</th><th style="text-align:right">CPM</th><th style="text-align:right">Reach</th><th>Start</th></tr></thead><tbody>${sortedLA.map(r=>`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td class="mono" style="text-align:right;color:var(--purple);font-weight:500">${r.results>0?r.results:'—'}</td><td class="mono" style="text-align:right">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td><td class="mono">${r.start||'—'}</td></tr>`).join('')}</tbody></table></div>
-    </div>`;
+}
+// ═══════════ LEADS FROM ADS ═══════════
+function renderLeadsAds(){
+  const emptyEl=document.getElementById('leadsAdsEmpty');
+  const contentEl=document.getElementById('leadsAdsContent');
+  const tag=document.getElementById('leadsAdsDataTag');
+  ['all','2025','2026'].forEach(y=>{const el=document.getElementById('leadsAdsYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadsAdsYear);});
+  const allLead=ADS_DATA.filter(r=>r.objective==='Lead');
+  if(!allLead.length){
+    if(emptyEl)emptyEl.style.display='flex';
+    if(contentEl)contentEl.style.display='none';
+    if(tag)tag.textContent='ยังไม่มีข้อมูล · อัปโหลดที่แท็บ Ad Spending';
+    return;
   }
+  if(emptyEl)emptyEl.style.display='none';
+  if(contentEl)contentEl.style.display='';
+  const d=activeLeadsAdsYear==='all'?allLead:allLead.filter(r=>String(r.start||'').startsWith(activeLeadsAdsYear));
+  const totalResults=d.reduce((s,r)=>s+(r.results||0),0);
+  const totalSpend=d.reduce((s,r)=>s+r.spend,0);
+  const totalReach=d.reduce((s,r)=>s+r.reach,0);
+  const totalImp=d.reduce((s,r)=>s+r.impressions,0);
+  const avgCPM=totalImp>0?totalSpend/totalImp*1000:d.reduce((s,r)=>s+(r.cpm||0),0)/Math.max(d.length,1);
+  if(tag)tag.textContent=`${totalResults} leads · ${d.length} ads · ${LS.date('ads')||'—'}`;
+  document.getElementById('leadsAdsKPIs').innerHTML=[
+    {label:'Total Leads',val:fmt(totalResults),color:'c-purple'},
+    {label:'Total Lead Spend',val:'฿'+totalSpend.toLocaleString('th-TH',{maximumFractionDigits:0}),color:'c-red'},
+    {label:'Avg CPM (฿/1K imp)',val:avgCPM>0?'฿'+avgCPM.toFixed(0):'—',color:'c-blue'},
+    {label:'Total Lead Reach',val:fmt(totalReach),color:'c-teal'},
+  ].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
+  const monthMap={};
+  d.forEach(r=>{const m=r.month||'';if(!m)return;if(!monthMap[m])monthMap[m]={results:0,spend:0};monthMap[m].results+=r.results||0;monthMap[m].spend+=r.spend;});
+  const months=MONTH_ORDER.filter(m=>monthMap[m]);
+  destroyChart('leadsAdsMonthChart');
+  if(months.length>0){
+    charts.leadsAdsMonthChart=new Chart(document.getElementById('leadsAdsMonthChart'),{type:'bar',data:{labels:months,datasets:[{label:'Leads',data:months.map(m=>monthMap[m].results),backgroundColor:months.map(m=>m.includes('2025')?'rgba(104,64,176,.75)':'rgba(192,53,28,.75)'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+' leads'}}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
+  }
+  destroyChart('leadsAdsSpendChart');
+  if(months.length>0){
+    charts.leadsAdsSpendChart=new Chart(document.getElementById('leadsAdsSpendChart'),{type:'bar',data:{labels:months,datasets:[{label:'Spend',data:months.map(m=>monthMap[m].spend),backgroundColor:months.map(m=>m.includes('2025')?'rgba(28,89,168,.7)':'rgba(192,53,28,.7)'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{label:c=>'฿'+c.parsed.y.toLocaleString('th-TH',{maximumFractionDigits:0})}}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,callback:v=>'฿'+fmt(v)}},x:{...CD.scales.x}}}});
+  }
+  const sorted=[...d].sort((a,b)=>b.results-a.results);
+  const tblCount=document.getElementById('leadsAdsTableCount');if(tblCount)tblCount.textContent=sorted.length+' ads';
+  document.getElementById('leadsAdsTable').innerHTML=sorted.map(r=>`<tr><td class="mono">${r.month||'—'}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td class="mono" style="text-align:right;font-weight:600;color:var(--purple)">${r.results>0?r.results:'—'}</td><td class="mono" style="text-align:right">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`).join('');
 }
 
 function parseLeadsMonth(dateStr){
