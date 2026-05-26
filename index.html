@@ -336,7 +336,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
       <div class="card-title">Lead Ad Detail <span id="leadsAdsTableCount"></span></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Month</th><th>Ad Set</th><th>Ad Name</th><th style="text-align:right">Results</th><th style="text-align:right">Spend (฿)</th><th style="text-align:right">CPM</th><th style="text-align:right">Reach</th></tr></thead>
+          <thead><tr><th>Month</th><th>Ad Set</th><th>Ad Name</th><th style="text-align:right">Results</th><th style="text-align:right">Spend (฿)</th><th style="text-align:right">CPR (฿)</th><th style="text-align:right">CPM</th><th style="text-align:right">Reach</th></tr></thead>
           <tbody id="leadsAdsTable"></tbody>
         </table>
       </div>
@@ -736,6 +736,7 @@ function parseUnifiedAdsRow(r){
     reach:parseInt(r['Reach'])||0,
     impressions:parseInt(r['Impressions'])||0,
     results:parseFloat(r['Results'])||parseInt(r['Total messaging contacts'])||0,
+    cost_per_result:parseFloat(r['Cost per results'])||0,
     cpm:parseFloat(r['CPM (cost per 1,000 impressions) (THB)'])||0,
     start,
     month,
@@ -1349,10 +1350,12 @@ function renderLeadsAds(){
   const totalReach=d.reduce((s,r)=>s+r.reach,0);
   const totalImp=d.reduce((s,r)=>s+r.impressions,0);
   const avgCPM=totalImp>0?totalSpend/totalImp*1000:d.reduce((s,r)=>s+(r.cpm||0),0)/Math.max(d.length,1);
+  const avgCPR=totalResults>0?totalSpend/totalResults:0;
   if(tag)tag.textContent=`${totalResults} leads · ${d.length} ads · ${LS.date('ads')||'—'}`;
   document.getElementById('leadsAdsKPIs').innerHTML=[
     {label:'Total Leads',val:fmt(totalResults),color:'c-purple'},
     {label:'Total Lead Spend',val:'฿'+totalSpend.toLocaleString('th-TH',{maximumFractionDigits:0}),color:'c-red'},
+    {label:'CPR (Cost/Lead)',val:avgCPR>0?'฿'+avgCPR.toFixed(2):'—',color:'c-amber'},
     {label:'Avg CPM (฿/1K imp)',val:avgCPM>0?'฿'+avgCPM.toFixed(0):'—',color:'c-blue'},
     {label:'Total Lead Reach',val:fmt(totalReach),color:'c-teal'},
   ].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
@@ -1369,7 +1372,7 @@ function renderLeadsAds(){
   }
   const sorted=[...d].sort((a,b)=>b.results-a.results);
   const tblCount=document.getElementById('leadsAdsTableCount');if(tblCount)tblCount.textContent=sorted.length+' ads';
-  document.getElementById('leadsAdsTable').innerHTML=sorted.map(r=>`<tr><td class="mono">${r.month||'—'}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td class="mono" style="text-align:right;font-weight:600;color:var(--purple)">${r.results>0?r.results:'—'}</td><td class="mono" style="text-align:right">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`).join('');
+  document.getElementById('leadsAdsTable').innerHTML=sorted.map(r=>{const cpr=r.cost_per_result>0?r.cost_per_result:(r.results>0?r.spend/r.results:0);return`<tr><td class="mono">${r.month||'—'}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td class="mono" style="text-align:right;font-weight:600;color:var(--purple)">${r.results>0?r.results:'—'}</td><td class="mono" style="text-align:right">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right;color:var(--amber)">${cpr>0?'฿'+cpr.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`;}).join('');
 }
 
 function parseLeadsMonth(dateStr){
