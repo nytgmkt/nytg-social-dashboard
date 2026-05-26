@@ -443,7 +443,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
             <tr>
               <th>Ad Set</th><th>Ad Name</th><th>Objective</th>
               <th style="text-align:right">Spend (฿)</th><th style="text-align:right">Results</th>
-              <th style="text-align:right">CPM</th><th style="text-align:right">Reach</th>
+              <th style="text-align:right">CPR (฿)</th><th style="text-align:right">CPM</th><th style="text-align:right">Reach</th>
             </tr>
           </thead>
           <tbody id="adsTableBody2"></tbody>
@@ -1422,12 +1422,16 @@ function renderAds(){
   const totalResults=d.reduce((s,r)=>s+(r.results||0),0);
   const totalImp=d.reduce((s,r)=>s+r.impressions,0);
   const avgCPM=totalImp>0?totalSpend/totalImp*1000:0;
-  document.getElementById('adsKPIs2').innerHTML=[
+  const isLeadTab=activeAdsObjFilter==='Lead';
+  const cprOverall=isLeadTab&&totalResults>0?totalSpend/totalResults:0;
+  const kpiDefs=[
     {label:'Total Spend',val:totalSpend.toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:0})+' ฿',color:'c-red'},
     {label:'Total Reach',val:fmt(totalReach),color:'c-teal'},
     {label:'Total Results',val:fmt(totalResults),color:'c-amber'},
+    ...(isLeadTab?[{label:'CPR (Cost/Lead)',val:cprOverall>0?'฿'+cprOverall.toFixed(2):'—',color:'c-purple'}]:[]),
     {label:'Avg CPM (฿/1K imp)',val:avgCPM>0?'฿'+avgCPM.toFixed(0):'—',color:'c-blue'},
-  ].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
+  ];
+  document.getElementById('adsKPIs2').innerHTML=kpiDefs.map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
   const monthMap={};
   d.forEach(r=>{const m=r.month||'';if(!m)return;if(!monthMap[m])monthMap[m]={spend:0,reach:0};monthMap[m].spend+=r.spend;monthMap[m].reach+=r.reach;});
   const months=MONTH_ORDER.filter(m=>monthMap[m]);
@@ -1439,7 +1443,8 @@ function renderAds(){
   const tblCount=document.getElementById('adsTableCount');if(tblCount)tblCount.textContent=sorted.length+' ads';
   document.getElementById('adsTableBody2').innerHTML=sorted.map(r=>{
     const objTag=r.objective==='AWN'?'<span class="badge" style="background:#DCE9F8;color:#1C59A8">🔵 AWN</span>':'<span class="badge" style="background:#FAF0DC;color:#C07D10">🟠 Lead</span>';
-    return`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td>${objTag}</td><td class="mono" style="text-align:right;font-weight:500">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.results>0?fmt(r.results):'—'}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`;
+    const rowCpr=r.objective==='Lead'?(r.cost_per_result>0?r.cost_per_result:(r.results>0?r.spend/r.results:0)):0;
+    return`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td>${objTag}</td><td class="mono" style="text-align:right;font-weight:500">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.results>0?fmt(r.results):'—'}</td><td class="mono" style="text-align:right;color:${rowCpr>0?'var(--amber)':'var(--muted)'}">${rowCpr>0?'฿'+rowCpr.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`;
   }).join('');
 }
 function renderAwn(){renderAds();}
