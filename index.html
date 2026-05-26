@@ -298,7 +298,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   </div>
   <div class="card" style="margin-bottom:0">
     <div class="card-title">Brand Post Detail</div>
-    <div class="tbl-wrap"><table><thead><tr><th>Brand</th><th>Type</th><th>Date</th><th>Category</th><th>%Reach</th><th>%Engagement</th><th>Reach</th><th>Views</th><th>Interactions</th><th>Leads</th><th>Avg Sec</th><th>Link</th></tr></thead><tbody id="brandTable"></tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Brand</th><th>Type</th><th>Date</th><th>%Reach</th><th>%Engagement</th><th>Reach</th><th>Views</th><th>Interactions</th><th>Avg Sec</th><th>Link</th></tr></thead><tbody id="brandTable"></tbody></table></div>
   </div>
 </div>
 
@@ -347,6 +347,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="card"><div class="card-title">Monthly Lead Volume</div><canvas id="leadsMonthChart" height="180"></canvas></div>
     <div class="card"><div class="card-title">Lead Source (Channel)</div><canvas id="leadsChannelChart" height="180"></canvas></div>
   </div>
+  <div id="leadAdsSection"></div>
   <div class="card" style="margin-bottom:0">
     <div class="card-title">Lead Detail <span id="leadsTableCount"></span></div>
     <div class="tbl-wrap">
@@ -387,11 +388,6 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
       <span class="pchip active" id="adsOF-all"  onclick="setAdsObjFilter('all')">All</span>
       <span class="pchip"        id="adsOF-awn"  onclick="setAdsObjFilter('AWN')">🔵 AWN</span>
       <span class="pchip"        id="adsOF-lead" onclick="setAdsObjFilter('Lead')">🟠 Lead</span>
-      <div style="width:1px;height:16px;background:var(--border);margin:0 4px"></div>
-      <span class="period-label">Month</span>
-      <select id="adsMF" onchange="setAdsMonthFilter(this.value)" style="font-size:12px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-family:'DM Sans',sans-serif">
-        <option value="all">All Months</option>
-      </select>
     </div>
     <div class="kpi-strip" id="adsKPIs2"></div>
     <div class="grid-2" style="margin-bottom:16px">
@@ -404,7 +400,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
         <table>
           <thead>
             <tr>
-              <th>Month</th><th>Ad Set</th><th>Ad Name</th><th>Objective</th>
+              <th>Ad Set</th><th>Ad Name</th><th>Objective</th>
               <th style="text-align:right">Spend (฿)</th><th style="text-align:right">Results</th>
               <th style="text-align:right">CPM</th><th style="text-align:right">Reach</th>
             </tr>
@@ -505,6 +501,9 @@ function fmt(n,d=0){if(n==null||isNaN(n))return'—';if(Math.abs(n)>=1e6)return(
 function avg(arr,key){const v=arr.map(d=>d[key]).filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
 function sum(arr,key){return arr.reduce((s,d)=>s+(d[key]||0),0);}
 function capReach(v){return v>100?98:v;}
+function monthToKey(m){const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=m.split(' ');const mi=mo.indexOf(p[0]);return mi>=0&&p[1]?p[1]+'-'+String(mi+1).padStart(2,'0'):m;}
+function keyToMonth(k){const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=k.split('-');if(p.length===2){const mi=parseInt(p[1])-1;if(mi>=0&&mi<12)return mo[mi]+' '+p[0];}return k;}
+function getLeadsTotal(year){return ADS_DATA.filter(r=>r.objective==='Lead'&&(year==='all'||String(r.start||'').startsWith(year))).reduce((s,r)=>s+(r.results||0),0);}
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
 const CD={plugins:{legend:{labels:{font:{family:"'DM Sans',sans-serif",size:11},usePointStyle:true,padding:14,color:'#4A4740'}}},scales:{x:{ticks:{color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},y:{ticks:{color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}}}};
@@ -926,7 +925,8 @@ function parseCSV(text){
     if(!permalink||!pub)return;
     const d=parseDateStr(pub);
     if(!d.date)return;
-    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:d.date,month:d.month,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:getN(row,'Reactions, comments and shares'),reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:getN(row,'Lead Count'),brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
+    const rcs=getN(row,'Reactions, comments and shares');const te=getN(row,'Total Engagement');
+    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:d.date,month:d.month,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:te||rcs,reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:getN(row,'Lead Count'),brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
   });
   return results;
 }
@@ -1059,8 +1059,8 @@ function renderExec(){
   d.forEach(p=>{if(p.month in monthPosts)monthPosts[p.month]++;});
   const mUsed=MONTH_ORDER.filter(m=>monthPosts[m]>0);
   destroyChart('execMonthChart');
-  charts.execMonthChart=new Chart(document.getElementById('execMonthChart'),{type:'bar',data:{labels:mUsed,datasets:[{data:mUsed.map(m=>monthPosts[m]),backgroundColor:mUsed.map(m=>m.includes('2025')?'rgba(0,166,147,.65)':'rgba(28,89,168,.65)'),borderRadius:4,borderSkipped:false}]},options:{...CD,responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{afterBody:ctx=>{const n=NOTES_DATA[ctx[0]?.label];return n?['','📌 '+n]:[];}}}}}});
-  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),sub:'Unique viewers',dark:true},{label:'Leads',val:fmt(LEADS_DATA.length),sub:'Lead Count (CRM)',dark:true},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:true},{label:'Interactions',val:fmt(sum(d,'reactions')+sum(d,'comments')+sum(d,'shares')),sub:'React+Comment+Share',dark:true},{label:'Avg %Reach',val:capReach(avg(d,'pct_reach')).toFixed(1)+'%',sub:'Viewers÷Impressions',dark:false},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',sub:'Per post avg',dark:false},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:false},{label:'Posts',val:d.length,sub:'Total posts',dark:false}];
+  charts.execMonthChart=new Chart(document.getElementById('execMonthChart'),{type:'bar',data:{labels:mUsed,datasets:[{data:mUsed.map(m=>monthPosts[m]),backgroundColor:mUsed.map(m=>m.includes('2025')?'rgba(0,166,147,.65)':'rgba(28,89,168,.65)'),borderRadius:4,borderSkipped:false}]},options:{...CD,responsive:true,plugins:{...CD.plugins,legend:{display:false},tooltip:{callbacks:{afterBody:ctx=>{const n=NOTES_DATA[monthToKey(ctx[0]?.label||'')];return n?['','📌 '+n]:[];}}}}}});
+  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),sub:'Unique viewers',dark:true},{label:'Leads',val:fmt(getLeadsTotal('all')),sub:'Lead Ads (Chat)',dark:true},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:true},{label:'Interactions',val:fmt(sum(d,'interactions')),sub:'Total Engagement',dark:true},{label:'Avg %Reach',val:capReach(avg(d,'pct_reach')).toFixed(1)+'%',sub:'Viewers÷Impressions',dark:false},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',sub:'Per post avg',dark:false},{label:'Total Views',val:fmt(sum(d,'view')),sub:'VDO + Photos',dark:false},{label:'Posts',val:d.length,sub:'Total posts',dark:false}];
   document.getElementById('execKPIs').innerHTML=kpis.map(k=>`<div class="kpi2 ${k.dark?'dark':'light'}"><div class="kpi2-label">${k.label}</div><div class="kpi2-val">${k.val}</div><div class="kpi2-sub">${k.sub}</div></div>`).join('');
 }
 
@@ -1068,13 +1068,13 @@ function renderExec(){
 function renderContent(){
   const d=filtered();
   const noGreet=d.filter(p=>!EXCLUDE_CATS.includes(p.cat1)||p.cat2||p.cat3);
-  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),color:'c-teal'},{label:'Avg %Reach',val:capReach(avg(d,'pct_reach')).toFixed(1)+'%',color:'c-teal'},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',color:'c-amber'},{label:'Total Interactions',val:fmt(sum(d,'reactions')+sum(d,'comments')+sum(d,'shares')),color:'c-amber'},{label:'Total Views',val:fmt(sum(d,'view')),color:'c-ink'},{label:'Total Leads',val:fmt(LEADS_DATA.length),color:'c-purple'},{label:'Posts',val:d.length,color:'c-ink'}];
+  const kpis=[{label:'Total Reach',val:fmt(sum(d,'reach')),color:'c-teal'},{label:'Avg %Reach',val:capReach(avg(d,'pct_reach')).toFixed(1)+'%',color:'c-teal'},{label:'Avg %Engagement',val:avg(d,'pct_eng').toFixed(1)+'%',color:'c-amber'},{label:'Total Interactions',val:fmt(sum(d,'interactions')),color:'c-amber'},{label:'Total Views',val:fmt(sum(d,'view')),color:'c-ink'},{label:'Total Leads',val:fmt(getLeadsTotal(activeYear)),color:'c-purple'},{label:'Posts',val:d.length,color:'c-ink'}];
   document.getElementById('contentKPIs').innerHTML=kpis.map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
   const mUsed=MONTH_ORDER.filter(m=>d.some(p=>p.month===m));
   const mR={},mN={};
   mUsed.forEach(m=>{const mp=d.filter(p=>p.month===m);mR[m]=sum(mp,'reach');mN[m]=sum(mp,'interactions');});
   destroyChart('trendChart');
-  charts.trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:mUsed,datasets:[{label:'Reach',data:mUsed.map(m=>mR[m]),borderColor:'#00A693',backgroundColor:'rgba(0,166,147,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true,yAxisID:'y'},{label:'Interactions',data:mUsed.map(m=>mN[m]),borderColor:'#C07D10',borderWidth:2,pointRadius:4,tension:.3,yAxisID:'y1'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}},tooltip:{callbacks:{afterBody:ctx=>{const n=NOTES_DATA[ctx[0]?.label];return n?['','📌 '+n]:[];}}}},scales:{y:{ticks:{callback:v=>fmt(v),color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},y1:{position:'right',ticks:{callback:v=>fmt(v),color:'#C07D10',font:{size:10}},grid:{display:false}},x:{ticks:{color:'#9B9690',font:{size:10}},grid:{display:false}}}}});
+  charts.trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:mUsed,datasets:[{label:'Reach',data:mUsed.map(m=>mR[m]),borderColor:'#00A693',backgroundColor:'rgba(0,166,147,.06)',borderWidth:2,pointRadius:4,tension:.3,fill:true,yAxisID:'y'},{label:'Interactions',data:mUsed.map(m=>mN[m]),borderColor:'#C07D10',borderWidth:2,pointRadius:4,tension:.3,yAxisID:'y1'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}},tooltip:{callbacks:{afterBody:ctx=>{const n=NOTES_DATA[monthToKey(ctx[0]?.label||'')];return n?['','📌 '+n]:[];}}}},scales:{y:{ticks:{callback:v=>fmt(v),color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},y1:{position:'right',ticks:{callback:v=>fmt(v),color:'#C07D10',font:{size:10}},grid:{display:false}},x:{ticks:{color:'#9B9690',font:{size:10}},grid:{display:false}}}}});
   const catPct={};
   noGreet.forEach(p=>[p.cat1,p.cat2,p.cat3].forEach(c=>{if(!c||EXCLUDE_CATS.includes(c))return;if(!catPct[c])catPct[c]=[];catPct[c].push(p.pct_reach);}));
   const catRanked=Object.entries(catPct).map(([k,v])=>({cat:k,pct:v.reduce((a,b)=>a+b,0)/v.length})).sort((a,b)=>b.pct-a.pct);
@@ -1147,7 +1147,7 @@ function renderBrand(){
   const brandSorted=[...d].sort((a,b)=>b.pct_reach-a.pct_reach);
   const cb=c=>{if(!c)return'';const bg=CAT_COLORS[c]||'#9B9690';return`<span class="badge" style="background:${bg}22;color:${bg}">${c}</span> `;};
   const linkCell=p=>p.link?`<button class="post-link" onclick="openLink(this.dataset.url)" data-url="${p.link.replace(/"/g,'&quot;')}"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V7M8 1h3m0 0v3m0-3L5 7"/></svg>View</button>`:'<span style="color:var(--muted);font-size:11px">—</span>';
-  document.getElementById('brandTable').innerHTML=brandSorted.map(p=>{const bc=bData.find(b=>b.brand===p.brand);return`<tr><td><span class="badge" style="background:${bc?.color||'#9B9690'}22;color:${bc?.color||'#9B9690'}">${p.brand}</span></td><td><span class="badge" style="background:#EDEAE3;color:#4A4740">${p.type}</span></td><td class="mono">${p.date}</td><td>${cb(p.cat1)}${cb(p.cat2)}</td><td class="mono" style="color:var(--teal2);font-weight:500">${p.pct_reach}%</td><td class="mono">${p.pct_eng}%</td><td class="mono">${fmt(p.reach)}</td><td class="mono">${fmt(p.view)}</td><td class="mono">${fmt(p.interactions)}</td><td class="mono" style="color:${p.leads>0?'var(--purple)':'var(--muted)'}">${p.leads||'—'}</td><td class="mono">${p.avg_sec?p.avg_sec+'s':'—'}</td><td>${linkCell(p)}</td></tr>`;}).join('');
+  document.getElementById('brandTable').innerHTML=brandSorted.map(p=>{const bc=bData.find(b=>b.brand===p.brand);return`<tr><td><span class="badge" style="background:${bc?.color||'#9B9690'}22;color:${bc?.color||'#9B9690'}">${p.brand}</span></td><td><span class="badge" style="background:#EDEAE3;color:#4A4740">${p.type}</span></td><td class="mono">${p.date}</td><td class="mono" style="color:var(--teal2);font-weight:500">${capReach(p.pct_reach)}%</td><td class="mono">${p.pct_eng}%</td><td class="mono">${fmt(p.reach)}</td><td class="mono">${fmt(p.view)}</td><td class="mono">${fmt(p.interactions)}</td><td class="mono">${p.avg_sec?p.avg_sec+'s':'—'}</td><td>${linkCell(p)}</td></tr>`;}).join('');
 }
 
 // ═══════════ LEADS & CRM ═══════════
@@ -1279,6 +1279,21 @@ function renderLeads(){
     <td class="mono" style="color:${l.est_value&&l.est_value!=='Not yet'&&l.est_value!==''?'var(--purple)':'var(--muted)'}">${l.est_value&&l.est_value!=='Not yet'&&l.est_value!==''?l.est_value:'Not yet'}</td>
     <td style="max-width:200px;font-size:11px;color:var(--muted)">${(l.notes||'').substring(0,60)+(l.notes&&l.notes.length>60?'…':'')}</td>
   </tr>`).join('');
+
+  // Lead Ads from ADS_DATA (R9)
+  const leadAdsSection=document.getElementById('leadAdsSection');
+  if(leadAdsSection){
+    const leadAds=ADS_DATA.filter(r=>r.objective==='Lead'&&(activeLeadsYear==='all'||String(r.start||'').startsWith(activeLeadsYear)));
+    if(leadAds.length===0){leadAdsSection.innerHTML='';return;}
+    const totalRes=leadAds.reduce((s,r)=>s+(r.results||0),0);
+    const totalSpend=leadAds.reduce((s,r)=>s+r.spend,0);
+    const totalReach=leadAds.reduce((s,r)=>s+r.reach,0);
+    const sortedLA=[...leadAds].sort((a,b)=>b.results-a.results);
+    leadAdsSection.innerHTML=`<div class="card" style="margin-bottom:16px">
+      <div class="card-title">Lead Ads (Ad Spending File) <span>${totalRes} leads · ฿${totalSpend.toLocaleString('th-TH',{maximumFractionDigits:0})} spend</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Ad Set</th><th>Ad Name</th><th style="text-align:right">Results</th><th style="text-align:right">Spend (฿)</th><th style="text-align:right">CPM</th><th style="text-align:right">Reach</th><th>Start</th></tr></thead><tbody>${sortedLA.map(r=>`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td class="mono" style="text-align:right;color:var(--purple);font-weight:500">${r.results>0?r.results:'—'}</td><td class="mono" style="text-align:right">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td><td class="mono">${r.start||'—'}</td></tr>`).join('')}</tbody></table></div>
+    </div>`;
+  }
 }
 
 function parseLeadsMonth(dateStr){
@@ -1322,13 +1337,6 @@ function renderAds(){
   ['all','AWN','Lead'].forEach(o=>{const id='adsOF-'+(o==='all'?'all':o==='AWN'?'awn':'lead');const el=document.getElementById(id);if(el)el.classList.toggle('active',o===activeAdsObjFilter);});
   let d=activeAdsYearFilter==='all'?ADS_DATA:ADS_DATA.filter(r=>(r.start||'').startsWith(activeAdsYearFilter));
   if(activeAdsObjFilter!=='all')d=d.filter(r=>r.objective===activeAdsObjFilter);
-  const allMonths=MONTH_ORDER.filter(m=>ADS_DATA.some(r=>r.month===m));
-  const mSel=document.getElementById('adsMF');
-  if(mSel){
-    mSel.innerHTML='<option value="all">All Months</option>'+allMonths.map(m=>`<option value="${m}"${m===activeAdsMonthFilter?' selected':''}>${m}</option>`).join('');
-    if(activeAdsMonthFilter!=='all'&&!allMonths.includes(activeAdsMonthFilter))activeAdsMonthFilter='all';
-  }
-  if(activeAdsMonthFilter!=='all')d=d.filter(r=>r.month===activeAdsMonthFilter);
   if(tag)tag.textContent=`${d.length} ads · อัปเดต ${LS.date('ads')||'—'}`;
   const totalSpend=d.reduce((s,r)=>s+r.spend,0);
   const totalReach=d.reduce((s,r)=>s+r.reach,0);
@@ -1352,7 +1360,7 @@ function renderAds(){
   const tblCount=document.getElementById('adsTableCount');if(tblCount)tblCount.textContent=sorted.length+' ads';
   document.getElementById('adsTableBody2').innerHTML=sorted.map(r=>{
     const objTag=r.objective==='AWN'?'<span class="badge" style="background:#DCE9F8;color:#1C59A8">🔵 AWN</span>':'<span class="badge" style="background:#FAF0DC;color:#C07D10">🟠 Lead</span>';
-    return`<tr><td class="mono">${r.month||'—'}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td>${objTag}</td><td class="mono" style="text-align:right;font-weight:500">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.results>0?fmt(r.results):'—'}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`;
+    return`<tr><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_set_name||'').replace(/"/g,'&quot;')}">${r.ad_set_name||'—'}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.ad_name||'').replace(/"/g,'&quot;')}">${r.ad_name||'—'}</td><td>${objTag}</td><td class="mono" style="text-align:right;font-weight:500">฿${r.spend.toLocaleString('th-TH',{maximumFractionDigits:0})}</td><td class="mono" style="text-align:right">${r.results>0?fmt(r.results):'—'}</td><td class="mono" style="text-align:right">${r.cpm>0?'฿'+r.cpm.toFixed(2):'—'}</td><td class="mono" style="text-align:right">${fmt(r.reach)}</td></tr>`;
   }).join('');
 }
 function renderAwn(){renderAds();}
@@ -1377,7 +1385,7 @@ function renderAnalysis(){
   const noGreet=d.filter(p=>!EXCLUDE_CATS.includes(p.cat1));
   const avgReach=d.reduce((s,p)=>s+(p.reach||0),0)/d.length;
   const avgPctReach=capReach(d.reduce((s,p)=>s+(p.pct_reach||0),0)/d.length);
-  const totalLeads=LEADS_DATA.length;
+  const totalLeads=getLeadsTotal(activeAnalysisYear);
   const catMap={};
   noGreet.forEach(p=>{[p.cat1,p.cat2,p.cat3].forEach(c=>{if(!c||EXCLUDE_CATS.includes(c))return;if(!catMap[c])catMap[c]=[];catMap[c].push(p.pct_reach);});});
   const catRanked=Object.entries(catMap).map(([c,vs])=>({cat:c,avg:vs.reduce((a,b)=>a+b,0)/vs.length})).sort((a,b)=>b.avg-a.avg);
@@ -1543,10 +1551,10 @@ function renderEditor(){
   } else if(editorType==='notes'){
     const months=[...new Set(DATA.map(p=>p.month).filter(Boolean))].sort((a,b)=>MONTH_ORDER.indexOf(a)-MONTH_ORDER.indexOf(b));
     if(thead)thead.innerHTML=`<tr><th>Month</th><th>Note</th></tr>`;
-    tbody.innerHTML=months.map(m=>`<tr data-month="${m}">
+    tbody.innerHTML=months.map(m=>{const k=monthToKey(m);return`<tr data-month="${m}" data-key="${k}">
       <td class="mono" style="color:var(--muted)">${m}</td>
-      <td contenteditable="true" data-field="note" class="editor-cell">${NOTES_DATA[m]||''}</td>
-    </tr>`).join('');
+      <td><textarea data-field="note" style="width:100%;min-height:40px;border:1px solid var(--border);border-radius:4px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;color:var(--ink2);background:var(--surface)">${NOTES_DATA[k]||NOTES_DATA[m]||''}</textarea></td>
+    </tr>`}).join('');
   }
 }
 
@@ -1583,10 +1591,10 @@ function editorAdsRowFromTr(tr){
 function editorNotesFromTbody(){
   const notes={};
   document.querySelectorAll('#editorTbody tr[data-month]').forEach(tr=>{
-    const month=tr.dataset.month;
+    const key=tr.dataset.key||monthToKey(tr.dataset.month);
     const el=tr.querySelector('[data-field="note"]');
-    const val=el?(el.innerText||el.textContent).trim().replace(/ /g,' ').replace(/\n/g,''):'';
-    if(val)notes[month]=val;
+    const val=el?(el.tagName==='TEXTAREA'?el.value:(el.innerText||el.textContent)).trim():'';
+    if(val)notes[key]=val;
   });
   return notes;
 }
