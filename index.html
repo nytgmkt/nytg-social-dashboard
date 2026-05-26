@@ -155,6 +155,60 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
 #page-crm.crm-empty .panel-year-bar,#page-crm.crm-empty .kpi-strip,#page-crm.crm-empty .grid-2,#page-crm.crm-empty > .card{display:none}
 #page-leads.leads-empty .panel-year-bar,#page-leads.leads-empty .kpi-strip{display:none}
 #page-ads.ads-empty .panel-year-bar,#page-ads.ads-empty .kpi-strip,#page-ads.ads-empty .grid-2,#page-ads.ads-empty > .card{display:none}
+/* ── MOBILE RESPONSIVE (max-width: 768px) ── */
+@media(max-width:768px){
+  /* 1. Navbar: horizontal scroll tabs, hide nav-right */
+  nav{padding:0 12px;height:48px}
+  .nav-brand{font-size:13px;margin-right:10px;flex-shrink:0}
+  .nav-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;flex-shrink:1}
+  .nav-tabs::-webkit-scrollbar{display:none}
+  .ntab{padding:0 11px;font-size:11px;height:48px}
+  .nav-right{display:none}
+  /* 2. Brand bar: smaller */
+  .brand-bar{padding:0 12px;height:28px}
+  .brand-btn{font-size:10px;padding:0 9px;height:20px;letter-spacing:.04em}
+  .brand-sep{margin:0 2px}
+  /* 3. Year bar: horizontal scroll */
+  .year-bar{padding:0 12px;height:32px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;flex-wrap:nowrap}
+  .year-bar::-webkit-scrollbar{display:none}
+  .ytab{padding:0 12px;height:32px;font-size:10px}
+  /* 4. Panel padding */
+  .panel{padding:16px 16px 48px}
+  .period-bar{padding:12px 16px 0}
+  /* panel-year-bar: scroll on mobile */
+  .panel-year-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;flex-wrap:nowrap;padding:8px 0 12px;margin-bottom:16px}
+  .panel-year-bar::-webkit-scrollbar{display:none}
+  /* 5. KPI strip: 2 columns */
+  .kpi-strip{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+  /* 6. Grids: 1 column (also covered at 880px, explicit here for 768px) */
+  .grid-2,.grid-3,.grid-3b{grid-template-columns:1fr;gap:12px}
+  .cat-cards-wrap{grid-template-columns:1fr}
+  .kpi2-grid{grid-template-columns:1fr 1fr;gap:8px}
+  /* 7. Table: smaller fonts, ensure scroll */
+  .tbl-wrap{-webkit-overflow-scrolling:touch}
+  table{font-size:11.5px}
+  th{padding:6px 8px;font-size:9px}
+  td{padding:7px 8px;font-size:11.5px}
+  .mono{font-size:11px}
+  /* 8. KPI val font size */
+  .kpi-val{font-size:22px}
+  .kpi2-val{font-size:18px}
+  /* 9. Card padding */
+  .card{padding:16px}
+  .cat-yr-card{padding:16px}
+  /* 10. Funnel label narrower */
+  .funnel-label{min-width:120px;font-size:11px}
+  .funnel-pct{min-width:32px}
+  /* Editor sticky header offset (nav+brand bar reduced) */
+  #editorTable th{top:76px}
+  /* Empty state compact */
+  .empty-state{padding:50px 16px}
+  .empty-state-title{font-size:18px}
+  /* Misc */
+  footer{padding:12px 16px}
+  .sec-head{margin:16px 0 10px}
+  .panel-upload-bar{gap:6px}
+}
 </style>
 </head>
 <body>
