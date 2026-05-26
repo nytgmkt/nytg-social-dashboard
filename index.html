@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#F4F2ED;--surface:#FFFFFF;--surface2:#EDEAE3;--ink:#131210;--ink2:#4A4740;--muted:#9B9690;--border:#DDD9D0;--teal:#00A693;--teal2:#007A6C;--teal-lt:#D5F0EC;--amber:#C07D10;--amber-lt:#FAF0DC;--blue:#1C59A8;--blue-lt:#DCE9F8;--red:#C0351C;--purple:#6840B0;--shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.04)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -209,9 +210,17 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   .sec-head{margin:16px 0 10px}
   .panel-upload-bar{gap:6px}
 }
+.toast-msg{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:9999;white-space:nowrap}
+.toast-msg.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-msg.toast-err{background:var(--red)}
+#loadingOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(244,242,237,.88);z-index:5000;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--ink)}
+.loading-sub{font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
+<div id="toastMsg" class="toast-msg"></div>
+<div id="loadingOverlay"><div class="loading-title">กำลังโหลดข้อมูล...</div><div class="loading-sub">Fetching from Supabase</div></div>
 
 <!-- BRAND BAR -->
 <div class="brand-bar">
@@ -239,6 +248,8 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <button class="upload-btn btn-outline" onclick="document.getElementById('csvLoadNew').click()">🔄 Load New Data</button>
     <button class="upload-btn btn-outline" onclick="document.getElementById('csvAddMonth').click()">➕ Add Month</button>
     <button class="upload-btn btn-fill" onclick="loadSample()">▶ Sample Data</button>
+    <button class="upload-btn btn-outline" onclick="sbSync()">☁️ Sync</button>
+    <button class="upload-btn btn-outline" onclick="sbPull()">⬇️ Pull</button>
   </div>
 </nav>
 <input type="file" id="csvLoadNew"       accept=".csv"       onchange="loadNewDataCSV(this)">
@@ -607,11 +618,148 @@ const CD={plugins:{legend:{labels:{font:{family:"'DM Sans',sans-serif",size:11},
 // ═══════════ LOCALSTORAGE HELPERS ═══════════
 const LS={
   key:(type)=>`${activeBrand}_${type}`,
-  save:(type,data)=>{localStorage.setItem(LS.key(type),JSON.stringify(data));localStorage.setItem(LS.key(type+'_updated'),new Date().toISOString());},
+  save:(type,data)=>{localStorage.setItem(LS.key(type),JSON.stringify(data));localStorage.setItem(LS.key(type+'_updated'),new Date().toISOString());if(!_sbPulling&&['posts','ads','leads'].includes(type))sbBgSync(type,data);},
   load:(type)=>{const r=localStorage.getItem(LS.key(type));return r?JSON.parse(r):null;},
   remove:(type)=>{localStorage.removeItem(LS.key(type));localStorage.removeItem(LS.key(type+'_updated'));},
   date:(type)=>{const iso=localStorage.getItem(LS.key(type+'_updated'));if(!iso)return null;const d=new Date(iso);return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 };
+
+// ═══════════ SUPABASE ═══════════
+let _sbPulling=false;
+const _supabase=window.supabase?.createClient?.(
+  'https://bsnblfkggxjqxuhdqbwf.supabase.co',
+  'sb_publishable_F3oog9xHx6Qb2fHS_jlr6Q_r0bUNEg3'
+)??null;
+
+function showToast(msg,ok=true){
+  const t=document.getElementById('toastMsg');if(!t)return;
+  t.textContent=msg;t.className='toast-msg'+(ok?'':' toast-err')+' show';
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function showLoading(v){const el=document.getElementById('loadingOverlay');if(el)el.style.display=v?'flex':'none';}
+
+function _postsToSupa(data){
+  return data.map(d=>({brand:activeBrand,year:d.month?d.month.split(' ')[1]:'',month:d.month||'',
+    reach:d.reach||0,total_engagement:d.interactions||0,percent_reach:d.pct_reach||0,
+    percent_engagement:d.pct_eng||0,post_type:d.type||'',category:d.cat1||'',
+    permalink:d.link||'',views:d.view||0,reactions:d.reactions||0,
+    comments:d.comments||0,shares:d.shares||0,publish_time:d.date||''}));
+}
+function _adsToSupa(data){
+  return data.map(d=>({year:d.month?d.month.split(' ')[1]:'',month:d.month||'',
+    ad_objective:d.objective||'',ad_name:d.ad_name||'',ad_set_name:d.ad_set_name||'',
+    amount_spent:d.spend||0,reach:d.reach||0,impressions:d.impressions||0,
+    results:d.results||0,cost_per_result:d.cost_per_result||0,cpm:d.cpm||0}));
+}
+function _crmToSupa(data){
+  return data.map(d=>({date:d.date||'',customer_name:d.customer||'',channel:d.channel||'',
+    stage:d.stage||'',product_category:d.product_cat||'',contact_person:d.contact_person||'',
+    est_quantity:d.est_qty||'',est_value:d.est_value||'',notes:d.notes||'',bounce:d.bounce||''}));
+}
+function _postsFromSupa(rows){
+  return rows.map(r=>({cat1:r.category||'',cat2:'',cat3:'',title:'',type:r.post_type||'',
+    date:r.publish_time||'',month:r.month||'',view:r.views||0,reach:r.reach||0,
+    impressions:0,interactions:r.total_engagement||0,reactions:r.reactions||0,
+    comments:r.comments||0,shares:r.shares||0,reels:0,pct_reach:r.percent_reach||0,
+    pct_eng:r.percent_engagement||0,leads:0,brand:r.brand||'',
+    avg_sec:0,link_clicks:0,link:r.permalink||''}));
+}
+function _adsFromSupa(rows){
+  return rows.map(r=>({ad_name:r.ad_name||'',ad_set_name:r.ad_set_name||'',
+    objective:r.ad_objective||'',spend:r.amount_spent||0,reach:r.reach||0,
+    impressions:r.impressions||0,results:r.results||0,cost_per_result:r.cost_per_result||0,
+    cpm:r.cpm||0,start:'',month:r.month||''}));
+}
+function _crmFromSupa(rows){
+  return rows.map(r=>({date:r.date||'',customer:r.customer_name||'',opportunity:'',
+    channel:r.channel||'',contact_role:'',lead_id:'',ad_creative:'',product_interest:'',
+    product_cat:r.product_category||'',est_qty:r.est_quantity||'',est_value:r.est_value||'',
+    stage:r.stage||'',contact_person:r.contact_person||'',
+    sales_status:'',notes:r.notes||'',bounce:r.bounce||''}));
+}
+
+async function sbBgSync(type,data){
+  if(!_supabase)return;
+  try{
+    if(type==='posts'&&data.length){
+      await _supabase.from('nytg_posts').delete().eq('brand',activeBrand);
+      const rows=_postsToSupa(data);
+      for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_posts').insert(rows.slice(i,i+200));
+    }else if(type==='ads'&&data.length){
+      await _supabase.from('nytg_ads').delete().not('id','is',null);
+      const rows=_adsToSupa(data);
+      for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_ads').insert(rows.slice(i,i+200));
+    }else if(type==='leads'&&data.length){
+      await _supabase.from('nytg_crm').delete().not('id','is',null);
+      const rows=_crmToSupa(data);
+      for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_crm').insert(rows.slice(i,i+200));
+    }
+  }catch(e){/* silent */}
+}
+
+async function sbSync(){
+  if(!_supabase){showToast('Supabase not available',false);return;}
+  try{
+    showToast('Syncing…');
+    if(DATA.length){
+      await _supabase.from('nytg_posts').delete().eq('brand',activeBrand);
+      const rows=_postsToSupa(DATA);
+      for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_posts').insert(rows.slice(i,i+200));
+    }
+    if(ADS_DATA.length){
+      await _supabase.from('nytg_ads').delete().not('id','is',null);
+      const rows=_adsToSupa(ADS_DATA);
+      for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_ads').insert(rows.slice(i,i+200));
+    }
+    if(LEADS_DATA.length){
+      await _supabase.from('nytg_crm').delete().not('id','is',null);
+      const rows=_crmToSupa(LEADS_DATA);
+      for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_crm').insert(rows.slice(i,i+200));
+    }
+    showToast('Synced ✓');
+  }catch(e){showToast('Sync error: '+e.message,false);}
+}
+
+async function sbPull(){
+  if(!_supabase){showToast('Supabase not available',false);return;}
+  _sbPulling=true;
+  try{
+    showToast('Loading from cloud…');
+    const brand=activeBrand;
+    const[pRes,aRes,cRes]=await Promise.all([
+      _supabase.from('nytg_posts').select('*').eq('brand',brand),
+      _supabase.from('nytg_ads').select('*'),
+      _supabase.from('nytg_crm').select('*'),
+    ]);
+    if(pRes.data&&pRes.data.length){DATA=_postsFromSupa(pRes.data);activePeriod='all';LS.save('posts',DATA);}
+    if(aRes.data&&aRes.data.length){ADS_DATA=_adsFromSupa(aRes.data);LS.save('ads',ADS_DATA);}
+    if(cRes.data&&cRes.data.length){LEADS_DATA=_crmFromSupa(cRes.data);LS.save('leads',LEADS_DATA);}
+    if(pRes.data&&pRes.data.length){updateBadge();showDashboard();renderAll();}
+    renderLeadsAds();renderCrm();renderAds();renderEditor();
+    showToast('Loaded from cloud ✓');
+  }catch(e){showToast('Pull error: '+e.message,false);}
+  finally{_sbPulling=false;}
+}
+
+async function sbAutoPull(){
+  if(!_supabase){showEmptyState();renderLeadsAds();renderCrm();renderAds();renderEditor();return;}
+  _sbPulling=true;
+  try{
+    const brand=activeBrand;
+    const[pRes,aRes,cRes]=await Promise.all([
+      _supabase.from('nytg_posts').select('*').eq('brand',brand),
+      _supabase.from('nytg_ads').select('*'),
+      _supabase.from('nytg_crm').select('*'),
+    ]);
+    let changed=false;
+    if(pRes.data&&pRes.data.length){DATA=_postsFromSupa(pRes.data);activePeriod='all';LS.save('posts',DATA);changed=true;}
+    if(aRes.data&&aRes.data.length){ADS_DATA=_adsFromSupa(aRes.data);LS.save('ads',ADS_DATA);}
+    if(cRes.data&&cRes.data.length){LEADS_DATA=_crmFromSupa(cRes.data);LS.save('leads',LEADS_DATA);}
+    if(changed){updateBadge();showDashboard();renderAll();}else showEmptyState();
+    renderLeadsAds();renderCrm();renderAds();renderEditor();
+  }catch(e){showEmptyState();renderLeadsAds();renderCrm();renderAds();renderEditor();}
+  finally{_sbPulling=false;}
+}
 
 // ═══════════ BRAND MANAGEMENT ═══════════
 function setBrand(b){
@@ -637,13 +785,12 @@ function initBrandData(){
   if(posts&&posts.length>0){
     DATA=posts;activePeriod='all';
     updateBadge();showDashboard();renderAll();
+    renderLeadsAds();renderCrm();renderAds();renderEditor();
   }else{
-    DATA=[];updateBadge();showEmptyState();
+    DATA=[];updateBadge();
+    showLoading(true);
+    sbAutoPull().finally(()=>showLoading(false));
   }
-  renderLeadsAds();
-  renderCrm();
-  renderAds();
-  renderEditor();
 }
 
 function showDashboard(){
