@@ -216,11 +216,18 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
 #loadingOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(244,242,237,.88);z-index:5000;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .loading-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--ink)}
 .loading-sub{font-size:13px;color:var(--muted)}
+.mobile-fab{display:none}
+@media(max-width:768px){
+  .mobile-fab{display:flex;position:fixed;bottom:20px;right:16px;flex-direction:row;gap:8px;z-index:400}
+  .mobile-fab .fab-btn{padding:8px 14px;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;background:var(--ink);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25);transition:all .15s}
+  .mobile-fab .fab-btn:hover{background:var(--teal2)}
+}
 </style>
 </head>
 <body>
 <div id="toastMsg" class="toast-msg"></div>
 <div id="loadingOverlay"><div class="loading-title">กำลังโหลดข้อมูล...</div><div class="loading-sub">Fetching from Supabase</div></div>
+<div class="mobile-fab"><button class="fab-btn" onclick="sbSync()">☁️ Sync</button><button class="fab-btn" onclick="sbPull()">⬇️ Pull</button></div>
 
 <!-- BRAND BAR -->
 <div class="brand-bar">
@@ -611,7 +618,7 @@ function capReach(v){return v>100?98:v;}
 function monthToKey(m){const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=m.split(' ');const mi=mo.indexOf(p[0]);return mi>=0&&p[1]?p[1]+'-'+String(mi+1).padStart(2,'0'):m;}
 function keyToMonth(k){const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const p=k.split('-');if(p.length===2){const mi=parseInt(p[1])-1;if(mi>=0&&mi<12)return mo[mi]+' '+p[0];}return k;}
 function getLeadsTotal(year){return ADS_DATA.filter(r=>r.objective==='Lead'&&(year==='all'||String(r.start||'').startsWith(year))).reduce((s,r)=>s+(r.results||0),0);}
-function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}const el=document.getElementById(id);if(el){const ex=Chart.getChart(el);if(ex)ex.destroy();}}
 
 const CD={plugins:{legend:{labels:{font:{family:"'DM Sans',sans-serif",size:11},usePointStyle:true,padding:14,color:'#4A4740'}}},scales:{x:{ticks:{color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}},y:{ticks:{color:'#9B9690',font:{size:10}},grid:{color:'#EDEAE3'}}}};
 
@@ -1465,7 +1472,7 @@ function renderCrm(){
   ].filter(x=>x.count>0);
   destroyChart('crmBuChart');
   if(buData.length>0){
-    charts.leadsBuChart=new Chart(document.getElementById('crmBuChart'),{type:'bar',data:{labels:buData.map(x=>x.bu),datasets:[{data:buData.map(x=>x.count),backgroundColor:buData.map(x=>x.color+'CC'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
+    charts.crmBuChart=new Chart(document.getElementById('crmBuChart'),{type:'bar',data:{labels:buData.map(x=>x.bu),datasets:[{data:buData.map(x=>x.count),backgroundColor:buData.map(x=>x.color+'CC'),borderRadius:6,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
   }
 
   // Contact person chart
@@ -1475,7 +1482,7 @@ function renderCrm(){
   destroyChart('crmPersonChart');
   if(personData.length>0){
     const pColors=['#1C59A8','#00A693','#6840B0','#C07D10','#C0351C'];
-    charts.leadsPersonChart=new Chart(document.getElementById('crmPersonChart'),{type:'bar',data:{labels:personData.map(([k])=>k),datasets:[{data:personData.map(([,v])=>v),backgroundColor:personData.map((_,i)=>pColors[i%pColors.length]+'CC'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
+    charts.crmPersonChart=new Chart(document.getElementById('crmPersonChart'),{type:'bar',data:{labels:personData.map(([k])=>k),datasets:[{data:personData.map(([,v])=>v),backgroundColor:personData.map((_,i)=>pColors[i%pColors.length]+'CC'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x}}}});
   }
 
   // Product category chart
@@ -1484,7 +1491,7 @@ function renderCrm(){
   const prodData=Object.entries(prodMap).sort((a,b)=>b[1]-a[1]);
   destroyChart('crmProductChart');
   if(prodData.length>0){
-    charts.leadsProductChart=new Chart(document.getElementById('crmProductChart'),{type:'bar',data:{labels:prodData.map(([k])=>k),datasets:[{data:prodData.map(([,v])=>v),backgroundColor:'rgba(0,166,147,.7)',borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,stepSize:1}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:10}}}}}});
+    charts.crmProductChart=new Chart(document.getElementById('crmProductChart'),{type:'bar',data:{labels:prodData.map(([k])=>k),datasets:[{data:prodData.map(([,v])=>v),backgroundColor:'rgba(0,166,147,.7)',borderRadius:5,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,stepSize:1}},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{size:10}}}}}});
   }
 
   // Monthly volume
@@ -1496,7 +1503,7 @@ function renderCrm(){
   const sortedMonths=Object.keys(monthMap).sort((a,b)=>new Date('01 '+a)-new Date('01 '+b));
   destroyChart('crmMonthChart');
   if(sortedMonths.length>0){
-    charts.leadsMonthChart=new Chart(document.getElementById('crmMonthChart'),{type:'bar',data:{labels:sortedMonths,datasets:[{data:sortedMonths.map(m=>monthMap[m]),backgroundColor:'rgba(28,89,168,.65)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,maxRotation:35}}}}});
+    charts.crmMonthChart=new Chart(document.getElementById('crmMonthChart'),{type:'bar',data:{labels:sortedMonths,datasets:[{data:sortedMonths.map(m=>monthMap[m]),backgroundColor:'rgba(28,89,168,.65)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,plugins:{...CD.plugins,legend:{display:false}},scales:{y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,stepSize:1}},x:{...CD.scales.x,ticks:{...CD.scales.x.ticks,maxRotation:35}}}}});
   }
 
   // Channel chart (NYTG vs NIC) — use year-filtered but brand-unfiltered data for full split view
@@ -1506,7 +1513,7 @@ function renderCrm(){
   const chData=Object.entries(chMap).sort((a,b)=>b[1]-a[1]);
   destroyChart('crmChannelChart');
   if(chData.length>0){
-    charts.leadsChannelChart=new Chart(document.getElementById('crmChannelChart'),{type:'doughnut',data:{labels:chData.map(([k,v])=>`${k} (${v})`),datasets:[{data:chData.map(([,v])=>v),backgroundColor:['rgba(0,166,147,.75)','rgba(192,125,16,.75)'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}}}}});
+    charts.crmChannelChart=new Chart(document.getElementById('crmChannelChart'),{type:'doughnut',data:{labels:chData.map(([k,v])=>`${k} (${v})`),datasets:[{data:chData.map(([,v])=>v),backgroundColor:['rgba(0,166,147,.75)','rgba(192,125,16,.75)'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{...CD.plugins.legend.labels}}}}});
   }
 
   // Table
