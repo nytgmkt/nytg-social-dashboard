@@ -821,20 +821,22 @@ function updateBadge(){
 function parseContentExcel(wb){
   const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const ws=wb.Sheets[wb.SheetNames[0]];
-  const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+  const raw=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
   if(!raw.length)return[];
   return raw.filter(r=>r['Permalink']&&(r['Publish time']||r['Year'])).map(r=>{
     const pub=String(r['Publish time']||'');
     const d=parseDateStr(pub);
     const yr=r['Year']?String(parseInt(r['Year'])||''):'';
     const mn=r['Month']?String(r['Month']).trim():'';
-    const month=(yr&&mn)?(mn+' '+yr):d.month;
+    const _moArr=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const _moIdx=_moArr.indexOf(mn);
+    const month=(yr&&mn&&_moIdx>=0)?(mn+' '+yr):d.month;
     const te=parseFloat(r['Total Engagement'])||0;
     const rcs=parseFloat(r['Reactions, comments and shares'])||0;
     return{
       cat1:String(r['Category 1']||''),cat2:String(r['Category 2']||''),cat3:String(r['Category 3']||''),
       title:String(r['Permalink']||''),type:String(r['Post type']||''),
-      date:d.date||String(r['Date']||''),month,
+      date:d.date||(_yr&&_moIdx>=0?`${_yr}-${String(_moIdx+1).padStart(2,'0')}-01`:''),month,
       view:parseFloat(r['View'])||0,reach:parseFloat(r['Reach'])||0,
       interactions:te||rcs,
       reactions:parseFloat(r['Reactions'])||0,
@@ -1243,14 +1245,18 @@ function parseCSV(text){
   const results=[];
   rows.slice(1).forEach(row=>{
     const permalink=get(row,'Permalink');
+    if(!permalink)return;
     const pub=get(row,'Publish time');
-    if(!permalink||!pub)return;
     const d=parseDateStr(pub);
-    if(!d.date)return;
-    const rcs=getN(row,'Reactions, comments and shares');const te=getN(row,'Total Engagement');
     const _yr=get(row,'Year');const _mn=get(row,'Month');
-    const _month=(_yr&&_mn)?(String(_mn).trim()+' '+String(parseInt(_yr)||'')):d.month;
-    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:d.date,month:_month,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:te||rcs,reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:0,brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
+    const _moArr=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const _moIdx=_moArr.indexOf(String(_mn).trim());
+    const _month=(_yr&&_mn&&_moIdx>=0)?(String(_mn).trim()+' '+String(parseInt(_yr)||'')):d.month;
+    // Use date from Publish time; fall back to Year-Month-01 for year filtering
+    const _date=d.date||(_yr&&_moIdx>=0?`${String(parseInt(_yr)||'')}-${String(_moIdx+1).padStart(2,'0')}-01`:'');
+    if(!_date&&!_month)return;
+    const rcs=getN(row,'Reactions, comments and shares');const te=getN(row,'Total Engagement');
+    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:_date,month:_month,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:te||rcs,reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:0,brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
   });
   return results;
 }
@@ -1273,8 +1279,17 @@ function parseCSVRows(text,sep){
 
 function parseDateStr(s){
   if(!s)return{date:'',month:''};
-  try{const parts=s.split(' ')[0].split('/');if(parts.length===3){const[m,d,y]=[parts[0].padStart(2,'0'),parts[1].padStart(2,'0'),parts[2]];const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return{date:`${y}-${m}-${d}`,month:`${mo[parseInt(m)-1]} ${y}`};}}catch(e){}
-  return{date:s,month:s.substring(0,7)};
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  try{
+    const day0=s.split(' ')[0];
+    // m/d/yyyy format (e.g. 1/7/2025)
+    const sl=day0.split('/');
+    if(sl.length===3){const[m,d,y]=[sl[0].padStart(2,'0'),sl[1].padStart(2,'0'),sl[2]];return{date:`${y}-${m}-${d}`,month:`${mo[parseInt(m)-1]} ${y}`};}
+    // ISO format YYYY-MM-DD (e.g. 2025-01-07 or 2025-01-07 15:00:00)
+    const da=day0.split('-');
+    if(da.length===3&&da[0].length===4){const[y,m,d]=da;const mi=parseInt(m)-1;if(mi>=0&&mi<12)return{date:`${y}-${m}-${d}`,month:`${mo[mi]} ${y}`};}
+  }catch(e){}
+  return{date:s.split(' ')[0]||s,month:''};
 }
 
 // ═══════════ LEADS CSV PARSER ═══════════
@@ -1461,7 +1476,7 @@ function renderBrand(){
   const d=filtered().filter(p=>p.brand);
   const brands=[...new Set(d.map(p=>p.brand))];
   const bData=brands.map((b,i)=>({brand:b,posts:d.filter(p=>p.brand===b).length,reach:sum(d.filter(p=>p.brand===b),'reach'),views:sum(d.filter(p=>p.brand===b),'view'),pct_reach:avg(d.filter(p=>p.brand===b),'pct_reach'),pct_eng:avg(d.filter(p=>p.brand===b),'pct_eng'),interactions:sum(d.filter(p=>p.brand===b),'interactions'),leads:sum(d.filter(p=>p.brand===b),'leads'),color:BRAND_COLORS[i%BRAND_COLORS.length]})).sort((a,b)=>b.pct_reach-a.pct_reach);
-  document.getElementById('brandKPIs').innerHTML=[{label:'Brands Tracked',val:brands.length,color:'c-ink'},{label:'Best Brand %Reach',val:capReach(bData[0]?.pct_reach||0).toFixed(1)+'%',color:'c-teal'},{label:'Best Brand',val:bData[0]?.brand||'—',color:'c-teal'},{label:'Total Branded Reach',val:fmt(sum(d,'reach')),color:'c-blue'},{label:'Total Branded Views',val:fmt(sum(d,'view')),color:'c-blue'},{label:'Total Leads (Branded)',val:fmt(sum(d,'leads')),color:'c-purple'}].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
+  document.getElementById('brandKPIs').innerHTML=[{label:'Brands Tracked',val:brands.length,color:'c-ink'},{label:'Best Brand %Reach',val:capReach(bData[0]?.pct_reach||0).toFixed(1)+'%',color:'c-teal'},{label:'Best Brand',val:bData[0]?.brand||'—',color:'c-teal'},{label:'Total Branded Reach',val:fmt(sum(d,'reach')),color:'c-blue'},{label:'Total Branded Views',val:fmt(sum(d,'view')),color:'c-blue'}].map(k=>`<div class="kpi ${k.color}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div></div>`).join('');
   const maxBPct=bData[0]?.pct_reach||1;
   document.getElementById('bestBrandBox').innerHTML=bData.map((b,i)=>i===0?`<div class="best-top"><span class="name">${b.brand}</span><span class="pct">${capReach(b.pct_reach).toFixed(1)}%</span></div>`:`<div class="best-row"><span class="name" style="min-width:100px">${b.brand}</span><div class="bar-wrap"><div class="bar-fill" style="width:${capReach(b.pct_reach)/capReach(maxBPct)*100}%;background:${b.color}"></div></div><span class="pct" style="color:${b.color}">${capReach(b.pct_reach).toFixed(1)}%</span></div>`).join('');
   destroyChart('brandReachChart');
