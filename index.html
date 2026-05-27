@@ -259,8 +259,8 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <button class="upload-btn btn-outline" onclick="sbPull()">⬇️ Pull</button>
   </div>
 </nav>
-<input type="file" id="csvLoadNew"       accept=".csv"       onchange="loadNewDataCSV(this)">
-<input type="file" id="csvAddMonth"   accept=".csv"       onchange="addMonthCSV(this)">
+<input type="file" id="csvLoadNew"       accept=".csv,.xlsx,.xls"       onchange="loadNewDataCSV(this)">
+<input type="file" id="csvAddMonth"   accept=".csv,.xlsx,.xls"       onchange="addMonthCSV(this)">
 <input type="file" id="leadsFileIn"   accept=".csv"       onchange="loadNewLeadsCSV(this)">
 <input type="file" id="leadsAddMonthIn" accept=".csv"     onchange="addMonthLeadsCSV(this)">
 <input type="file" id="adsFileIn"      accept=".xlsx,.xls" onchange="loadNewAdsExcel(this)">
@@ -817,9 +817,59 @@ function updateBadge(){
   b.textContent=DATA.length>0?`${DATA.length} posts · อัปเดต ${dt||'—'}`:'ยังไม่มีข้อมูล';
 }
 
+// ═══════════ CONTENT EXCEL PARSER ═══════════
+function parseContentExcel(wb){
+  const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+  if(!raw.length)return[];
+  return raw.filter(r=>r['Permalink']&&(r['Publish time']||r['Year'])).map(r=>{
+    const pub=String(r['Publish time']||'');
+    const d=parseDateStr(pub);
+    const yr=r['Year']?String(parseInt(r['Year'])||''):'';
+    const mn=r['Month']?String(r['Month']).trim():'';
+    const month=(yr&&mn)?(mn+' '+yr):d.month;
+    const te=parseFloat(r['Total Engagement'])||0;
+    const rcs=parseFloat(r['Reactions, comments and shares'])||0;
+    return{
+      cat1:String(r['Category 1']||''),cat2:String(r['Category 2']||''),cat3:String(r['Category 3']||''),
+      title:String(r['Permalink']||''),type:String(r['Post type']||''),
+      date:d.date||String(r['Date']||''),month,
+      view:parseFloat(r['View'])||0,reach:parseFloat(r['Reach'])||0,
+      interactions:te||rcs,
+      reactions:parseFloat(r['Reactions'])||0,
+      comments:parseFloat(r['Comments'])||0,
+      shares:parseFloat(r['Shares'])||0,
+      reels:parseFloat(r['REELS_PLAYS:COUNT'])||0,
+      pct_reach:parseFloat(r['%Reach'])||0,
+      pct_eng:parseFloat(r['%Engagement Rate'])||0,
+      leads:0,
+      brand:String(r['Brand']||''),
+      avg_sec:parseFloat(r['Average Seconds viewed'])||0,
+      link_clicks:parseFloat(r['Link clicks'])||0,
+      link:String(r['Permalink']||''),
+    };
+  }).filter(r=>r.date||r.month);
+}
+
 // ═══════════ UPLOAD HANDLERS ═══════════
 function loadNewDataCSV(input){
   const file=input.files[0];if(!file)return;
+  const isXlsx=file.name.match(/\.xlsx?$/i);
+  if(isXlsx){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const rows=parseContentExcel(wb);
+        if(!rows.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+        LS.remove('posts');DATA=rows;activePeriod='all';
+        LS.save('posts',DATA);updateBadge();showDashboard();renderAll();
+      }catch(err){alert('Error: '+err.message);}
+      input.value='';
+    };
+    reader.readAsArrayBuffer(file);return;
+  }
   const reader=new FileReader();
   reader.onload=e=>{
     try{
@@ -845,6 +895,25 @@ function loadNewDataCSV(input){
 
 function addMonthCSV(input){
   const file=input.files[0];if(!file)return;
+  const isXlsx=file.name.match(/\.xlsx?$/i);
+  if(isXlsx){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const newRows=parseContentExcel(wb);
+        if(!newRows.length){alert('ไม่พบข้อมูลในไฟล์');input.value='';return;}
+        const existing=LS.load('posts')||DATA;
+        const existLinks=new Set(existing.map(d=>d.link).filter(Boolean));
+        const added=newRows.filter(r=>!r.link||!existLinks.has(r.link));
+        DATA=[...existing,...added];activePeriod='all';
+        LS.save('posts',DATA);updateBadge();showDashboard();renderAll();
+        alert(`เพิ่ม ${added.length} posts ใหม่ (ข้าม ${newRows.length-added.length} ซ้ำ)`);
+      }catch(err){alert('Error: '+err.message);}
+      input.value='';
+    };
+    reader.readAsArrayBuffer(file);return;
+  }
   const reader=new FileReader();
   reader.onload=e=>{
     try{
@@ -935,7 +1004,7 @@ function parseUnifiedAdsRow(r){
   // Use explicit Year+Month columns if present (new cumulative file format)
   if(r['Year']&&r['Month']){const yr=String(parseInt(r['Year'])||'');const mn=String(r['Month']).trim();if(yr&&mn&&mn.length>=2)month=mn+' '+yr;}
   const objRaw=String(r['Ad Objective']||r['Objective']||'');
-  const objective=objRaw.toLowerCase().includes('awareness')?'AWN':'Lead';
+  const objective=objRaw.toLowerCase().includes('lead')?'Lead':'AWN';
   return{
     ad_name:r['Ad name']||'',
     ad_set_name:r['Ad set name']||'',
@@ -943,7 +1012,7 @@ function parseUnifiedAdsRow(r){
     spend:parseFloat(r['Amount spent (THB)'])||0,
     reach:parseInt(r['Reach'])||0,
     impressions:parseInt(r['Impressions'])||0,
-    results:parseFloat(r['Results'])||parseInt(r['Total messaging contacts'])||0,
+    results:parseFloat(r['Results'])||parseInt(r['Total messaging contacts'])||parseInt(r['New messaging contacts'])||0,
     cost_per_result:parseFloat(r['Cost per results'])||0,
     cpm:parseFloat(r['CPM (cost per 1,000 impressions) (THB)'])||0,
     start,
@@ -990,7 +1059,7 @@ function parseLeadAdsRow(r){
   return{
     ad_name:r['Ad name']||'',
     spend:parseFloat(r['Amount spent (THB)'])||0,
-    results:parseFloat(r['Results'])||parseInt(r['Total messaging contacts'])||0,
+    results:parseFloat(r['Results'])||parseInt(r['Total messaging contacts'])||parseInt(r['New messaging contacts'])||0,
     cost_per_result:parseFloat(r['Cost per results'])||0,
     ctr,
     reach:parseInt(r['Reach'])||0,
@@ -1179,7 +1248,9 @@ function parseCSV(text){
     const d=parseDateStr(pub);
     if(!d.date)return;
     const rcs=getN(row,'Reactions, comments and shares');const te=getN(row,'Total Engagement');
-    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:d.date,month:d.month,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:te||rcs,reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:getN(row,'Lead Count'),brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
+    const _yr=get(row,'Year');const _mn=get(row,'Month');
+    const _month=(_yr&&_mn)?(String(_mn).trim()+' '+String(parseInt(_yr)||'')):d.month;
+    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:d.date,month:_month,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:te||rcs,reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:0,brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
   });
   return results;
 }
