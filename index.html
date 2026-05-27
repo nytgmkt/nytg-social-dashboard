@@ -838,11 +838,11 @@ async function sbPull(){
       _supabase.from('nytg_crm').select('*'),
     ]);
     // Clear all local keys before replacing with Supabase data
-    LS.remove('posts');LS.remove('ads');LS.remove('leads');LS.remove('crm');
     DATA=[];ADS_DATA=[];LEADS_DATA=[];
-    if(pRes.data?.length){DATA=_postsFromSupa(pRes.data);}
-    if(aRes.data?.length){ADS_DATA=_adsFromSupa(aRes.data);}
-    if(cRes.data?.length){LEADS_DATA=_crmFromSupa(cRes.data);}
+    localStorage.removeItem('posts');localStorage.removeItem('ads');localStorage.removeItem('leads');localStorage.removeItem('crm');
+    DATA=pRes.data?.length?_postsFromSupa(pRes.data):[];
+    ADS_DATA=aRes.data?.length?_adsFromSupa(aRes.data):[];
+    LEADS_DATA=cRes.data?.length?_crmFromSupa(cRes.data):[];
     activePeriod='all';
     if(DATA.length)LS.save('posts',DATA);
     if(ADS_DATA.length)LS.save('ads',ADS_DATA);
