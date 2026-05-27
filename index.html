@@ -669,6 +669,7 @@ const LS={
 
 // ═══════════ SUPABASE ═══════════
 let _sbPulling=false;
+let _sbSyncing=false;
 const _supabase=window.supabase?.createClient?.(
   'https://bsnblfkggxjqxuhdqbwf.supabase.co',
   'sb_publishable_F3oog9xHx6Qb2fHS_jlr6Q_r0bUNEg3'
@@ -742,11 +743,16 @@ async function sbBgSync(type,data){
 
 async function sbSync(){
   if(!_supabase){showToast('Supabase not available',false);return;}
+  if(_sbSyncing){showToast('Sync already in progress…');return;}
+  _sbSyncing=true;
   try{
     showToast('Syncing…');
-    await _supabase.from('nytg_posts').delete().neq('id','00000000-0000-0000-0000-000000000000');
-    await _supabase.from('nytg_ads').delete().neq('id','00000000-0000-0000-0000-000000000000');
-    await _supabase.from('nytg_crm').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    const{error:de1}=await _supabase.from('nytg_posts').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    if(de1)throw new Error('Delete posts failed: '+de1.message);
+    const{error:de2}=await _supabase.from('nytg_ads').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    if(de2)throw new Error('Delete ads failed: '+de2.message);
+    const{error:de3}=await _supabase.from('nytg_crm').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    if(de3)throw new Error('Delete CRM failed: '+de3.message);
     if(DATA.length){
       const rows=_postsToSupa(DATA);
       for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_posts').insert(rows.slice(i,i+200));
@@ -761,6 +767,7 @@ async function sbSync(){
     }
     showToast('Synced ✓');
   }catch(e){showToast('Sync error: '+e.message,false);}
+  finally{_sbSyncing=false;}
 }
 
 async function sbPull(){
@@ -768,17 +775,17 @@ async function sbPull(){
   _sbPulling=true;
   try{
     showToast('Loading from cloud…');
-    const brand=activeBrand;
     const[pRes,aRes,cRes]=await Promise.all([
-      _supabase.from('nytg_posts').select('*').eq('brand',brand),
+      _supabase.from('nytg_posts').select('*'),
       _supabase.from('nytg_ads').select('*'),
       _supabase.from('nytg_crm').select('*'),
     ]);
-    // Clear local storage first, then replace with whatever Supabase returns
-    LS.remove('posts');LS.remove('ads');LS.remove('leads');
-    DATA=pRes.data?.length?_postsFromSupa(pRes.data):[];
-    ADS_DATA=aRes.data?.length?_adsFromSupa(aRes.data):[];
-    LEADS_DATA=cRes.data?.length?_crmFromSupa(cRes.data):[];
+    // Clear all local keys before replacing with Supabase data
+    LS.remove('posts');LS.remove('ads');LS.remove('leads');LS.remove('crm');
+    DATA=[];ADS_DATA=[];LEADS_DATA=[];
+    if(pRes.data?.length){DATA=_postsFromSupa(pRes.data);}
+    if(aRes.data?.length){ADS_DATA=_adsFromSupa(aRes.data);}
+    if(cRes.data?.length){LEADS_DATA=_crmFromSupa(cRes.data);}
     activePeriod='all';
     if(DATA.length)LS.save('posts',DATA);
     if(ADS_DATA.length)LS.save('ads',ADS_DATA);
