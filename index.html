@@ -222,12 +222,44 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   .mobile-fab .fab-btn{padding:8px 14px;border-radius:6px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;background:var(--ink);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25);transition:all .15s}
   .mobile-fab .fab-btn:hover{background:var(--teal2)}
 }
+/* ── AUTH ── */
+#loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center}
+.login-card{background:var(--surface);border-radius:14px;box-shadow:0 4px 32px rgba(0,0,0,.12);padding:40px 44px;width:100%;max-width:400px}
+@media(max-width:480px){.login-card{padding:28px 20px;margin:0 12px}}
+.login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--ink);margin-bottom:4px}.login-logo span{color:var(--teal)}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+.login-label{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.login-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:var(--bg);outline:none;transition:border-color .15s;margin-bottom:14px}
+.login-input:focus{border-color:var(--teal)}
+.login-btn{width:100%;padding:10px;border-radius:6px;border:none;background:var(--ink);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;margin-top:4px}
+.login-btn:hover{background:var(--teal)}
+.login-btn:disabled{opacity:.6;cursor:not-allowed}
+.login-err{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
+.nav-user-pill{display:flex;align-items:center;gap:6px}
+.role-badge{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.role-badge.admin{background:#2E7D32;color:#fff}
+.role-badge.viewer{background:var(--surface2);color:var(--ink2);border:1px solid rgba(255,255,255,.2)}
+.viewer-mode .admin-only{display:none!important}
 </style>
 </head>
 <body>
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo">NYTG<span>.</span></div>
+    <div class="login-sub">Social Media Dashboard · กรุณาเข้าสู่ระบบ</div>
+    <form onsubmit="signIn(event)">
+      <label class="login-label">Email</label>
+      <input id="loginEmail" class="login-input" type="email" autocomplete="email" required placeholder="your@email.com">
+      <label class="login-label">Password</label>
+      <input id="loginPassword" class="login-input" type="password" autocomplete="current-password" required placeholder="••••••••">
+      <button id="loginBtn" class="login-btn" type="submit">เข้าสู่ระบบ</button>
+      <div class="login-err" id="loginErr"></div>
+    </form>
+  </div>
+</div>
 <div id="toastMsg" class="toast-msg"></div>
 <div id="loadingOverlay"><div class="loading-title">กำลังโหลดข้อมูล...</div><div class="loading-sub">Fetching from Supabase</div></div>
-<div class="mobile-fab"><button class="fab-btn" onclick="sbSync()">☁️ Sync</button><button class="fab-btn" onclick="sbPull()">⬇️ Pull</button></div>
+<div class="mobile-fab admin-only"><button class="fab-btn" onclick="sbSync()">☁️ Sync</button><button class="fab-btn" onclick="sbPull()">⬇️ Pull</button></div>
 
 <!-- BRAND BAR -->
 <div class="brand-bar">
@@ -247,16 +279,20 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="ntab" onclick="showPage('leads')">📋 Leads</div>
     <div class="ntab" onclick="showPage('crm')">🤝 CRM</div>
     <div class="ntab" onclick="showPage('ads')">Ad Spending</div>
-    <div class="ntab" onclick="showPage('editor')">Data Editor</div>
+    <div class="ntab admin-only" onclick="showPage('editor')">Data Editor</div>
     <div class="ntab" onclick="showPage('analysis')">📊 Analysis</div>
   </div>
   <div class="nav-right">
+    <div id="navUserPill" class="nav-user-pill" style="display:none">
+      <span class="posts-badge" style="display:flex;align-items:center;gap:6px"><span id="navUserEmail">—</span><span id="navRoleBadge" class="role-badge"></span></span>
+      <button class="upload-btn btn-outline" onclick="signOut()">↩ Sign Out</button>
+    </div>
     <span class="posts-badge" id="postsBadge">ยังไม่มีข้อมูล</span>
-    <button class="upload-btn btn-outline" onclick="document.getElementById('csvLoadNew').click()">🔄 Load New Data</button>
-    <button class="upload-btn btn-outline" onclick="document.getElementById('csvAddMonth').click()">➕ Add Month</button>
-    <button class="upload-btn btn-fill" onclick="loadSample()">▶ Sample Data</button>
-    <button class="upload-btn btn-outline" onclick="sbSync()">☁️ Sync</button>
-    <button class="upload-btn btn-outline" onclick="sbPull()">⬇️ Pull</button>
+    <button class="upload-btn btn-outline admin-only" onclick="document.getElementById('csvLoadNew').click()">🔄 Load New Data</button>
+    <button class="upload-btn btn-outline admin-only" onclick="document.getElementById('csvAddMonth').click()">➕ Add Month</button>
+    <button class="upload-btn btn-fill admin-only" onclick="loadSample()">▶ Sample Data</button>
+    <button class="upload-btn btn-outline admin-only" onclick="sbSync()">☁️ Sync</button>
+    <button class="upload-btn btn-outline admin-only" onclick="sbPull()">⬇️ Pull</button>
   </div>
 </nav>
 <input type="file" id="csvLoadNew"       accept=".csv,.xlsx,.xls"       onchange="loadNewDataCSV(this)">
@@ -290,8 +326,8 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   <div class="empty-state-title" id="esTitle">ยังไม่มีข้อมูล</div>
   <div class="empty-state-sub" id="esSub">กรุณา Upload CSV เพื่อเริ่มต้น หรือกด Sample Data เพื่อดูตัวอย่าง</div>
   <div class="empty-state-btns">
-    <button class="es-btn es-btn-fill" onclick="document.getElementById('csvLoadNew').click()">🔄 Upload CSV</button>
-    <button class="es-btn es-btn-out"  onclick="loadSample()">▶ ดู Sample Data</button>
+    <button class="es-btn es-btn-fill admin-only" onclick="document.getElementById('csvLoadNew').click()">🔄 Upload CSV</button>
+    <button class="es-btn es-btn-out admin-only"  onclick="loadSample()">▶ ดู Sample Data</button>
   </div>
 </div>
 
@@ -421,9 +457,9 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   <div style="height:16px"></div>
   <div class="panel-upload-bar">
     <span class="pub-label">🤝 CRM</span>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
-    <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleLeads()">▶ Load Sample</button>
+    <button class="upload-btn btn-outline admin-only" style="font-size:11px" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
+    <button class="upload-btn btn-outline admin-only" style="font-size:11px" onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
+    <button class="upload-btn btn-fill admin-only"    style="font-size:11px" onclick="loadSampleLeads()">▶ Load Sample</button>
     <span class="pub-tag" id="crmDataTag"></span>
   </div>
   <div id="crmEmpty" class="empty-state" style="display:none">
@@ -431,9 +467,9 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="empty-state-title">ยังไม่มีข้อมูล CRM</div>
     <div class="empty-state-sub">กรุณาอัปโหลดไฟล์ CSV ของ Tracking หรือกด Load Sample เพื่อดูตัวอย่าง</div>
     <div class="empty-state-btns">
-      <button class="es-btn es-btn-fill" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
-      <button class="es-btn es-btn-out"  onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
-      <button class="es-btn es-btn-out"  onclick="loadSampleLeads()">▶ Load Sample</button>
+      <button class="es-btn es-btn-fill admin-only" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
+      <button class="es-btn es-btn-out admin-only"  onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
+      <button class="es-btn es-btn-out admin-only"  onclick="loadSampleLeads()">▶ Load Sample</button>
     </div>
   </div>
   <div class="panel-year-bar">
@@ -475,9 +511,9 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   <div style="height:16px"></div>
   <div class="panel-upload-bar">
     <span class="pub-label">💰 Ad Spending</span>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsUnifiedFileIn').click()">🔄 Load New</button>
-    <button class="upload-btn btn-outline" style="font-size:11px" onclick="document.getElementById('adsUnifiedAddMonthIn').click()">➕ Add Month</button>
-    <button class="upload-btn btn-fill"    style="font-size:11px" onclick="loadSampleUnifiedAds()">▶ Load Sample</button>
+    <button class="upload-btn btn-outline admin-only" style="font-size:11px" onclick="document.getElementById('adsUnifiedFileIn').click()">🔄 Load New</button>
+    <button class="upload-btn btn-outline admin-only" style="font-size:11px" onclick="document.getElementById('adsUnifiedAddMonthIn').click()">➕ Add Month</button>
+    <button class="upload-btn btn-fill admin-only"    style="font-size:11px" onclick="loadSampleUnifiedAds()">▶ Load Sample</button>
     <span class="pub-tag" id="adsDataTag2"></span>
   </div>
   <div id="adsEmpty2" class="empty-state" style="display:none">
@@ -485,9 +521,9 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="empty-state-title">ยังไม่มีข้อมูล Ad Spending</div>
     <div class="empty-state-sub">อัปโหลดไฟล์ xlsx จาก Facebook Ads Manager ต้องมีคอลัมน์: Ad name, Ad set name, Ad Objective, Amount spent (THB), Reporting starts</div>
     <div class="empty-state-btns">
-      <button class="es-btn es-btn-fill" onclick="document.getElementById('adsUnifiedFileIn').click()">🔄 Load New</button>
-      <button class="es-btn es-btn-out"  onclick="document.getElementById('adsUnifiedAddMonthIn').click()">➕ Add Month</button>
-      <button class="es-btn es-btn-out"  onclick="loadSampleUnifiedAds()">▶ Load Sample</button>
+      <button class="es-btn es-btn-fill admin-only" onclick="document.getElementById('adsUnifiedFileIn').click()">🔄 Load New</button>
+      <button class="es-btn es-btn-out admin-only"  onclick="document.getElementById('adsUnifiedAddMonthIn').click()">➕ Add Month</button>
+      <button class="es-btn es-btn-out admin-only"  onclick="loadSampleUnifiedAds()">▶ Load Sample</button>
     </div>
   </div>
   <div id="adsContent2" style="display:none">
@@ -766,6 +802,119 @@ async function sbAutoPull(){
     renderLeadsAds();renderCrm();renderAds();renderEditor();
   }catch(e){showEmptyState();renderLeadsAds();renderCrm();renderAds();renderEditor();}
   finally{_sbPulling=false;}
+}
+
+// ═══════════ SUPABASE AUTH + RBAC ═══════════
+let currentUserRole=null;
+let currentUserEmail=null;
+
+async function initAuth(){
+  if(!_supabase){
+    // No Supabase client — skip auth, run as admin (dev/local mode)
+    _showMainApp();
+    applyRoleVisibility('admin');
+    initBrandData();
+    return;
+  }
+  // Set up auth state listener for session changes (tab refresh, token refresh, sign-out)
+  _supabase.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_OUT'||!session){
+      currentUserRole=null;currentUserEmail=null;
+      _showLoginOverlay();
+    }else if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION'){
+      await _onSessionReady(session);
+    }
+  });
+  // Also eagerly check existing session on first load
+  const{data:{session}}=await _supabase.auth.getSession();
+  if(!session){
+    _showLoginOverlay();
+  }
+  // _onSessionReady is called by onAuthStateChange with INITIAL_SESSION if session exists
+}
+
+async function _onSessionReady(session){
+  currentUserEmail=session.user.email||session.user.id;
+  currentUserRole=await _checkUserRole(session.user.id);
+  _showMainApp();
+  _updateNavUser(currentUserEmail,currentUserRole);
+  applyRoleVisibility(currentUserRole);
+  if(typeof initBrandData==='function')initBrandData();
+}
+
+async function _checkUserRole(userId){
+  if(!_supabase)return'admin';
+  try{
+    const{data,error}=await _supabase.from('user_roles').select('role').eq('user_id',userId).single();
+    if(!error&&data&&data.role)return data.role;
+  }catch(e){}
+  return'viewer'; // default to viewer if no row found
+}
+
+function applyRoleVisibility(role){
+  if(role==='admin'){
+    document.body.classList.remove('viewer-mode');
+  }else{
+    document.body.classList.add('viewer-mode');
+    // If currently on editor tab, redirect to exec
+    const editorPanel=document.getElementById('page-editor');
+    if(editorPanel&&editorPanel.classList.contains('active')){
+      if(typeof showPage==='function')showPage('exec');
+    }
+  }
+}
+
+function _showLoginOverlay(){
+  const overlay=document.getElementById('loginOverlay');
+  if(overlay)overlay.style.display='flex';
+  const err=document.getElementById('loginErr');
+  if(err)err.textContent='';
+  const btn=document.getElementById('loginBtn');
+  if(btn){btn.disabled=false;btn.textContent='เข้าสู่ระบบ';}
+}
+
+function _showMainApp(){
+  const overlay=document.getElementById('loginOverlay');
+  if(overlay)overlay.style.display='none';
+}
+
+function _updateNavUser(email,role){
+  const pill=document.getElementById('navUserPill');
+  const emailEl=document.getElementById('navUserEmail');
+  const roleEl=document.getElementById('navRoleBadge');
+  if(!pill)return;
+  pill.style.display='flex';
+  if(emailEl)emailEl.textContent=email.length>22?email.slice(0,20)+'…':email;
+  if(roleEl){
+    roleEl.textContent=role==='admin'?'🔴 Admin':'👁 Viewer';
+    roleEl.className='role-badge '+(role==='admin'?'admin':'viewer');
+  }
+}
+
+async function signIn(e){
+  e.preventDefault();
+  if(!_supabase){showToast('Supabase not configured',false);return;}
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const btn=document.getElementById('loginBtn');
+  const errEl=document.getElementById('loginErr');
+  btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ…';
+  errEl.textContent='';
+  const{error}=await _supabase.auth.signInWithPassword({email,password});
+  if(error){
+    errEl.textContent=error.message==='Invalid login credentials'?'Email หรือ Password ไม่ถูกต้อง':error.message;
+    btn.disabled=false;btn.textContent='เข้าสู่ระบบ';
+  }
+  // On success, onAuthStateChange fires SIGNED_IN → _onSessionReady handles the rest
+}
+
+async function signOut(){
+  if(_supabase)await _supabase.auth.signOut();
+  currentUserRole=null;currentUserEmail=null;
+  document.body.classList.remove('viewer-mode');
+  const pill=document.getElementById('navUserPill');
+  if(pill)pill.style.display='none';
+  _showLoginOverlay();
 }
 
 // ═══════════ BRAND MANAGEMENT ═══════════
@@ -2139,7 +2288,7 @@ function editorSyncSelectAll(){
 
 // ═══════════ INIT ═══════════
 function openLink(url){window.open(url,'_blank');}
-initBrandData();
+initAuth();
 
 </script>
 </body>
