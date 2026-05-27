@@ -687,7 +687,7 @@ function _postsToSupa(data){
     reach:d.reach||0,total_engagement:d.interactions||0,percent_reach:d.pct_reach||0,
     percent_engagement:d.pct_eng||0,post_type:d.type||'',category:d.cat1||'',
     permalink:d.link||'',views:d.view||0,reactions:d.reactions||0,
-    comments:d.comments||0,shares:d.shares||0,publish_time:d.date||''}));
+    comments:d.comments||0,shares:d.shares||0}));
 }
 function _adsToSupa(data){
   return data.map(d=>({year:d.month?d.month.split(' ')[1]:'',month:d.month||'',
@@ -702,7 +702,7 @@ function _crmToSupa(data){
 }
 function _postsFromSupa(rows){
   return rows.map(r=>({cat1:r.category||'',cat2:'',cat3:'',title:'',type:r.post_type||'',
-    date:r.publish_time||'',month:r.month||'',view:r.views||0,reach:r.reach||0,
+    date:'',month:r.month||'',view:r.views||0,reach:r.reach||0,
     impressions:0,interactions:r.total_engagement||0,reactions:r.reactions||0,
     comments:r.comments||0,shares:r.shares||0,reels:0,pct_reach:r.percent_reach||0,
     pct_eng:r.percent_engagement||0,leads:0,brand:r.brand||'',
@@ -1685,6 +1685,7 @@ function renderBrand(){
 }
 
 // ═══════════ LEADS & CRM ═══════════
+function renderLeads(){renderCrm();}
 function renderCrm(){
   // sync year tab UI
   ['all','2025','2026'].forEach(y=>{const el=document.getElementById('crmYtab-'+y);if(el)el.classList.toggle('active',y===activeLeadsYear);});
