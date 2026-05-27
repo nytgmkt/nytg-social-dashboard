@@ -810,27 +810,29 @@ let currentUserEmail=null;
 
 async function initAuth(){
   if(!_supabase){
-    // No Supabase client — skip auth, run as admin (dev/local mode)
-    _showMainApp();
-    applyRoleVisibility('admin');
-    initBrandData();
-    return;
+    _showMainApp();applyRoleVisibility('admin');initBrandData();return;
   }
-  // Set up auth state listener for session changes (tab refresh, token refresh, sign-out)
-  _supabase.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='SIGNED_OUT'||!session){
-      currentUserRole=null;currentUserEmail=null;
-      _showLoginOverlay();
-    }else if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION'){
+  // getSession() reliably reads persisted session from localStorage — no async race
+  try{
+    const{data:{session}}=await _supabase.auth.getSession();
+    if(session){
       await _onSessionReady(session);
+    }else{
+      _showLoginOverlay();
     }
-  });
-  // Also eagerly check existing session on first load
-  const{data:{session}}=await _supabase.auth.getSession();
-  if(!session){
+  }catch(e){
     _showLoginOverlay();
   }
-  // _onSessionReady is called by onAuthStateChange with INITIAL_SESSION if session exists
+  // onAuthStateChange: only watch for real sign-out; do NOT redirect on INITIAL_SESSION
+  _supabase.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'){
+      currentUserRole=null;currentUserEmail=null;
+      document.body.classList.remove('viewer-mode');
+      const pill=document.getElementById('navUserPill');
+      if(pill)pill.style.display='none';
+      _showLoginOverlay();
+    }
+  });
 }
 
 async function _onSessionReady(session){
@@ -893,23 +895,43 @@ function _updateNavUser(email,role){
 
 async function signIn(e){
   e.preventDefault();
-  if(!_supabase){showToast('Supabase not configured',false);return;}
+  if(!_supabase){showToast('Supabase ยังโหลดไม่เสร็จ กรุณารีเฟรชหน้า',false);return;}
   const email=document.getElementById('loginEmail').value.trim();
   const password=document.getElementById('loginPassword').value;
   const btn=document.getElementById('loginBtn');
   const errEl=document.getElementById('loginErr');
-  btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ…';
-  errEl.textContent='';
-  const{error}=await _supabase.auth.signInWithPassword({email,password});
-  if(error){
-    errEl.textContent=error.message==='Invalid login credentials'?'Email หรือ Password ไม่ถูกต้อง':error.message;
+  if(!email||!password){errEl.textContent='กรุณากรอกอีเมลและรหัสผ่าน';return;}
+  btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ…';errEl.textContent='';
+  let timedOut=false;
+  const tid=setTimeout(()=>{
+    timedOut=true;
+    errEl.textContent='การเชื่อมต่อช้า กรุณาลองใหม่';
     btn.disabled=false;btn.textContent='เข้าสู่ระบบ';
+  },15000);
+  try{
+    const{data,error}=await _supabase.auth.signInWithPassword({email,password});
+    clearTimeout(tid);
+    if(timedOut)return;
+    if(error){
+      const msg=error.message.toLowerCase();
+      errEl.textContent=(msg.includes('invalid')||msg.includes('credentials'))
+        ?'อีเมลหรือรหัสผ่านไม่ถูกต้อง':error.message;
+      btn.disabled=false;btn.textContent='เข้าสู่ระบบ';
+      return;
+    }
+    if(data?.session)await _onSessionReady(data.session);
+  }catch(err){
+    clearTimeout(tid);
+    if(!timedOut){
+      errEl.textContent='เกิดข้อผิดพลาด: '+(err.message||'กรุณาลองใหม่');
+      btn.disabled=false;btn.textContent='เข้าสู่ระบบ';
+    }
   }
-  // On success, onAuthStateChange fires SIGNED_IN → _onSessionReady handles the rest
 }
 
 async function signOut(){
-  if(_supabase)await _supabase.auth.signOut();
+  if(_supabase)await _supabase.auth.signOut().catch(()=>{});
+  // onAuthStateChange SIGNED_OUT handles cleanup, but also reset directly for speed
   currentUserRole=null;currentUserEmail=null;
   document.body.classList.remove('viewer-mode');
   const pill=document.getElementById('navUserPill');
