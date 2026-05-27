@@ -736,11 +736,15 @@ function showToast(msg,ok=true){
 function showLoading(v){const el=document.getElementById('loadingOverlay');if(el)el.style.display=v?'flex':'none';}
 
 function _postsToSupa(data){
-  return data.map(d=>({brand:activeBrand,year:d.month?d.month.split(' ')[1]:'',month:d.month||'',
+  return data.map(d=>({
+    brand:activeBrand,
+    year:Number(d.year)||0,
+    month:(d.month||'').split(' ')[0],
     reach:d.reach||0,total_engagement:d.interactions||0,percent_reach:d.pct_reach||0,
     percent_engagement:d.pct_eng||0,post_type:d.type||'',category:d.cat1||'',
     permalink:d.link||'',views:d.view||0,reactions:d.reactions||0,
-    comments:d.comments||0,shares:d.shares||0}));
+    comments:d.comments||0,shares:d.shares||0
+  }));
 }
 function _adsToSupa(data){
   return data.map(d=>({year:d.month?d.month.split(' ')[1]:'',month:d.month||'',
