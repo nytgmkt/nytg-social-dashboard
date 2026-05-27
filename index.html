@@ -725,15 +725,15 @@ async function sbBgSync(type,data){
   if(!_supabase)return;
   try{
     if(type==='posts'&&data.length){
-      await _supabase.from('nytg_posts').delete().eq('brand',activeBrand);
+      await _supabase.from('nytg_posts').delete().neq('id','00000000-0000-0000-0000-000000000000');
       const rows=_postsToSupa(data);
       for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_posts').insert(rows.slice(i,i+200));
     }else if(type==='ads'&&data.length){
-      await _supabase.from('nytg_ads').delete().not('id','is',null);
+      await _supabase.from('nytg_ads').delete().neq('id','00000000-0000-0000-0000-000000000000');
       const rows=_adsToSupa(data);
       for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_ads').insert(rows.slice(i,i+200));
     }else if(type==='leads'&&data.length){
-      await _supabase.from('nytg_crm').delete().not('id','is',null);
+      await _supabase.from('nytg_crm').delete().neq('id','00000000-0000-0000-0000-000000000000');
       const rows=_crmToSupa(data);
       for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_crm').insert(rows.slice(i,i+200));
     }
@@ -744,18 +744,18 @@ async function sbSync(){
   if(!_supabase){showToast('Supabase not available',false);return;}
   try{
     showToast('Syncing…');
+    await _supabase.from('nytg_posts').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    await _supabase.from('nytg_ads').delete().neq('id','00000000-0000-0000-0000-000000000000');
+    await _supabase.from('nytg_crm').delete().neq('id','00000000-0000-0000-0000-000000000000');
     if(DATA.length){
-      await _supabase.from('nytg_posts').delete().eq('brand',activeBrand);
       const rows=_postsToSupa(DATA);
       for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_posts').insert(rows.slice(i,i+200));
     }
     if(ADS_DATA.length){
-      await _supabase.from('nytg_ads').delete().not('id','is',null);
       const rows=_adsToSupa(ADS_DATA);
       for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_ads').insert(rows.slice(i,i+200));
     }
     if(LEADS_DATA.length){
-      await _supabase.from('nytg_crm').delete().not('id','is',null);
       const rows=_crmToSupa(LEADS_DATA);
       for(let i=0;i<rows.length;i+=200)await _supabase.from('nytg_crm').insert(rows.slice(i,i+200));
     }
@@ -774,10 +774,17 @@ async function sbPull(){
       _supabase.from('nytg_ads').select('*'),
       _supabase.from('nytg_crm').select('*'),
     ]);
-    if(pRes.data&&pRes.data.length){DATA=_postsFromSupa(pRes.data);activePeriod='all';LS.save('posts',DATA);}
-    if(aRes.data&&aRes.data.length){ADS_DATA=_adsFromSupa(aRes.data);LS.save('ads',ADS_DATA);}
-    if(cRes.data&&cRes.data.length){LEADS_DATA=_crmFromSupa(cRes.data);LS.save('leads',LEADS_DATA);}
-    if(pRes.data&&pRes.data.length){updateBadge();showDashboard();renderAll();}
+    // Clear local storage first, then replace with whatever Supabase returns
+    LS.remove('posts');LS.remove('ads');LS.remove('leads');
+    DATA=pRes.data?.length?_postsFromSupa(pRes.data):[];
+    ADS_DATA=aRes.data?.length?_adsFromSupa(aRes.data):[];
+    LEADS_DATA=cRes.data?.length?_crmFromSupa(cRes.data):[];
+    activePeriod='all';
+    if(DATA.length)LS.save('posts',DATA);
+    if(ADS_DATA.length)LS.save('ads',ADS_DATA);
+    if(LEADS_DATA.length)LS.save('leads',LEADS_DATA);
+    updateBadge();
+    if(DATA.length){showDashboard();renderAll();}else showEmptyState();
     renderLeadsAds();renderCrm();renderAds();renderEditor();
     showToast('Loaded from cloud ✓');
   }catch(e){showToast('Pull error: '+e.message,false);}
