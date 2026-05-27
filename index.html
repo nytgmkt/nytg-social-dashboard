@@ -669,7 +669,7 @@ function _postsFromSupa(rows){
     impressions:0,interactions:r.total_engagement||0,reactions:r.reactions||0,
     comments:r.comments||0,shares:r.shares||0,reels:0,pct_reach:r.percent_reach||0,
     pct_eng:r.percent_engagement||0,leads:0,brand:r.brand||'',
-    avg_sec:0,link_clicks:0,link:r.permalink||''}));
+    year:parseInt(r.year)||0,avg_sec:0,link_clicks:0,link:r.permalink||''}));
 }
 function _adsFromSupa(rows){
   return rows.map(r=>({ad_name:r.ad_name||'',ad_set_name:r.ad_set_name||'',
@@ -836,7 +836,7 @@ function parseContentExcel(wb){
     return{
       cat1:String(r['Category 1']||''),cat2:String(r['Category 2']||''),cat3:String(r['Category 3']||''),
       title:String(r['Permalink']||''),type:String(r['Post type']||''),
-      date:d.date||(_yr&&_moIdx>=0?`${_yr}-${String(_moIdx+1).padStart(2,'0')}-01`:''),month,
+      date:d.date||(_yr&&_moIdx>=0?`${_yr}-${String(_moIdx+1).padStart(2,'0')}-01`:''),month,year:parseInt(yr)||0,
       view:parseFloat(r['View'])||0,reach:parseFloat(r['Reach'])||0,
       interactions:te||rcs,
       reactions:parseFloat(r['Reactions'])||0,
@@ -1256,7 +1256,7 @@ function parseCSV(text){
     const _date=d.date||(_yr&&_moIdx>=0?`${String(parseInt(_yr)||'')}-${String(_moIdx+1).padStart(2,'0')}-01`:'');
     if(!_date&&!_month)return;
     const rcs=getN(row,'Reactions, comments and shares');const te=getN(row,'Total Engagement');
-    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:_date,month:_month,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:te||rcs,reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:0,brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
+    results.push({cat1:get(row,'Category 1'),cat2:get(row,'Category 2'),cat3:get(row,'Category 3'),title:permalink,type:get(row,'Post type'),date:_date,month:_month,year:parseInt(_yr)||0,view:getN(row,'View'),reach:getN(row,'Reach'),interactions:te||rcs,reactions:getN(row,'Reactions'),comments:getN(row,'Comments'),shares:getN(row,'Shares'),reels:getN(row,'REELS_PLAYS:COUNT'),pct_reach:getN(row,'%Reach'),pct_eng:getN(row,'%Engagement Rate'),leads:0,brand:get(row,'Brand'),avg_sec:getN(row,'Average Seconds viewed'),link_clicks:getN(row,'Link clicks'),link:permalink});
   });
   return results;
 }
@@ -1348,7 +1348,14 @@ function setAdsObjFilter(o){activeAdsObjFilter=o;renderAds();}
 function setAdsMonthFilter(m){activeAdsMonthFilter=m;renderAds();}
 function setAnaYear(y){activeAnalysisYear=y;activeAnalysisMonth='all';renderAnalysis();}
 function setAnaMonth(m){activeAnalysisMonth=m;renderAnalysis();}
-function yearFiltered(data){if(activeYear==='all')return data;return data.filter(d=>d.date&&d.date.startsWith(activeYear));}
+function yearFiltered(data){
+  if(activeYear==='all')return data;
+  return data.filter(d=>
+    String(d.year)===String(activeYear)||
+    String(d.date||'').startsWith(activeYear)||
+    (d.month&&d.month.includes(activeYear))
+  );
+}
 
 // ═══════════ PERIOD FILTER ═══════════
 function buildPeriodBar(){
@@ -1749,7 +1756,11 @@ function renderAnalysis(){
   const panel=document.getElementById('page-analysis');
   if(!panel)return;
   ['all','2025','2026'].forEach(y=>{const el=document.getElementById('anaYF-'+y);if(el)el.classList.toggle('active',y===activeAnalysisYear);});
-  const byYear=activeAnalysisYear==='all'?DATA:DATA.filter(p=>(p.date||'').startsWith(activeAnalysisYear));
+  const byYear=activeAnalysisYear==='all'?DATA:DATA.filter(p=>
+    String(p.year)===String(activeAnalysisYear)||
+    String(p.date||'').startsWith(activeAnalysisYear)||
+    (p.month&&p.month.includes(activeAnalysisYear))
+  );
   const availMonths=MONTH_ORDER.filter(m=>byYear.some(p=>p.month===m));
   const monthTabEl=document.getElementById('anaMonthTabs');
   if(monthTabEl)monthTabEl.innerHTML='<span class="pchip '+(activeAnalysisMonth==='all'?'active':'')+'" onclick="setAnaMonth(\'all\')">ทุกเดือน</span>'+availMonths.map(m=>`<span class="pchip ${m===activeAnalysisMonth?'active':''}" onclick="setAnaMonth('${m}')">${m}</span>`).join('');
