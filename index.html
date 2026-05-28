@@ -284,6 +284,14 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   #hamburgerBtn{display:flex;align-items:center;justify-content:center}
   #editorTable th{top:52px}
 }
+/* ── DATA EDITOR TABLE FIX ── */
+#page-editor .tbl-wrap{max-height:calc(100vh - 260px);overflow-y:auto;overflow-x:auto}
+#page-editor #editorTable th{position:sticky;top:0!important;z-index:3;background:var(--surface2)}
+/* ── DATA HUB ── */
+.hub-section{background:var(--surface);border-radius:10px;padding:20px 22px;box-shadow:var(--shadow);margin-bottom:16px}
+.hub-section-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.hub-section-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.hub-btn-row{display:flex;gap:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -326,6 +334,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
     <div class="ntab" onclick="showPage('ads');closeSidebar()">💰 Ad Spending</div>
     <div class="ntab admin-only" onclick="showPage('editor');closeSidebar()">✏️ Data Editor</div>
     <div class="ntab" onclick="showPage('analysis');closeSidebar()">🔍 Analysis</div>
+    <div class="ntab admin-only" onclick="showPage('hub');closeSidebar()">☁️ Data Hub</div>
   </nav>
   <div class="sb-footer">
     <div id="navUserPill" class="nav-user-pill" style="display:none">
@@ -341,11 +350,7 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   <button id="hamburgerBtn" onclick="openSidebar()">☰</button>
   <span class="posts-badge" id="postsBadge">ยังไม่มีข้อมูล</span>
   <div class="tb-spacer"></div>
-  <button class="upload-btn btn-outline admin-only" onclick="document.getElementById('csvLoadNew').click()">🔄 Load New Data</button>
-  <button class="upload-btn btn-outline admin-only" onclick="document.getElementById('csvAddMonth').click()">➕ Add Month</button>
-  <button class="upload-btn btn-fill admin-only" onclick="loadSample()">▶ Sample Data</button>
-  <button class="upload-btn btn-outline admin-only" onclick="sbSync()">☁️ Sync</button>
-  <button class="upload-btn btn-outline admin-only" onclick="sbPull()">⬇️ Pull</button>
+  <button class="upload-btn btn-outline admin-only" style="font-size:11px" onclick="showPage('hub');closeSidebar()">☁️ Data Hub</button>
 </div>
 <input type="file" id="csvLoadNew"       accept=".csv,.xlsx,.xls"       onchange="loadNewDataCSV(this)">
 <input type="file" id="csvAddMonth"   accept=".csv,.xlsx,.xls"       onchange="addMonthCSV(this)">
@@ -624,6 +629,48 @@ footer{text-align:center;padding:16px 32px;font-size:11px;color:var(--muted);bor
   </div>
   <div style="display:flex;align-items:center;gap:8px;padding:0 0 16px;flex-wrap:wrap" id="anaMonthTabs"></div>
   <div id="anaContent"></div>
+</div>
+
+<!-- ═══ DATA HUB PANEL ═══ -->
+<div class="panel" id="page-hub">
+  <div style="height:16px"></div>
+  <div class="sec-head"><div class="sec-head-title">☁️ Data Hub</div><div class="sec-head-sub">อัปโหลดไฟล์ข้อมูลและซิงค์กับ Supabase</div></div>
+
+  <div class="hub-section">
+    <div class="hub-section-title">📄 Content</div>
+    <div class="hub-section-sub">ใช้กับ: Executive Summary · Content Performance · Category Content · Brand Performance</div>
+    <div class="hub-btn-row">
+      <button class="upload-btn btn-fill" onclick="document.getElementById('csvLoadNew').click()">🔄 Load New</button>
+      <button class="upload-btn btn-outline" onclick="document.getElementById('csvAddMonth').click()">➕ Add Month</button>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <div class="hub-section-title">👥 CRM / Tracking</div>
+    <div class="hub-section-sub">ใช้กับ: Leads · CRM</div>
+    <div class="hub-btn-row">
+      <button class="upload-btn btn-fill" onclick="document.getElementById('leadsFileIn').click()">🔄 Load New</button>
+      <button class="upload-btn btn-outline" onclick="document.getElementById('leadsAddMonthIn').click()">➕ Add Month</button>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <div class="hub-section-title">💰 Ad Spending &amp; Leads</div>
+    <div class="hub-section-sub">ใช้กับ: Ad Spending · Leads</div>
+    <div class="hub-btn-row">
+      <button class="upload-btn btn-fill" onclick="document.getElementById('adsUnifiedFileIn').click()">🔄 Load New</button>
+      <button class="upload-btn btn-outline" onclick="document.getElementById('adsUnifiedAddMonthIn').click()">➕ Add Month</button>
+    </div>
+  </div>
+
+  <div class="hub-section" style="margin-bottom:0">
+    <div class="hub-section-title">☁️ Supabase Sync</div>
+    <div class="hub-section-sub">Sync → push ข้อมูลจาก localStorage ขึ้น Supabase&nbsp;&nbsp;·&nbsp;&nbsp;Pull → ดึงข้อมูลจาก Supabase ลงมา</div>
+    <div class="hub-btn-row">
+      <button class="upload-btn btn-fill" onclick="sbSync()">☁️ Sync to Cloud</button>
+      <button class="upload-btn btn-outline" onclick="sbPull()">⬇️ Pull from Cloud</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ DATA EDITOR PANEL ═══ -->
@@ -1616,7 +1663,7 @@ function filtered(){const base=yearFiltered(DATA);return activePeriod==='all'?ba
 
 // ═══════════ PAGE SWITCH ═══════════
 function showPage(p){
-  const pages=['exec','content','category','brand','leads','crm','ads','editor','analysis'];
+  const pages=['exec','content','category','brand','leads','crm','ads','editor','analysis','hub'];
   document.querySelectorAll('.ntab').forEach((t,i)=>t.classList.toggle('active',pages[i]===p));
   const postsTabs=['exec','content','category','brand'];
   const hasData=DATA.length>0;
