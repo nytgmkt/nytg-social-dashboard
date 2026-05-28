@@ -839,7 +839,7 @@ async function sbPull(){
     ]);
     // Clear all local keys before replacing with Supabase data
     DATA=[];ADS_DATA=[];LEADS_DATA=[];
-    localStorage.removeItem('posts');localStorage.removeItem('ads');localStorage.removeItem('leads');localStorage.removeItem('crm');
+    LS.remove('posts');LS.remove('ads');LS.remove('leads');LS.remove('crm');LS.remove('ads_awn');LS.remove('ads_lead');
     DATA=pRes.data?.length?_postsFromSupa(pRes.data):[];
     ADS_DATA=aRes.data?.length?_adsFromSupa(aRes.data):[];
     LEADS_DATA=cRes.data?.length?_crmFromSupa(cRes.data):[];
