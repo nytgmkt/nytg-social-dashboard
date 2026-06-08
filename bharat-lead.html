@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NYTG · Bharat Tex 2026 — Lead App</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:#F2F5F9;color:#111827;min-height:100vh;overflow-x:hidden}
+button,input,select,textarea{font-family:inherit}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;vertical-align:middle;line-height:1}
+
+/* ── CSS VARIABLES ── */
+:root{
+  --primary:#004AC6;--primary-dk:#003A9E;--primary-lt:#EEF2FF;--primary-mid:rgba(0,74,198,.12);
+  --teal:#1D9E75;--teal-lt:#E1F5EE;--teal-dk:#0F6E56;
+  --hot:#E24B4A;--hot-bg:#FCEBEB;
+  --warm:#BA7517;--warm-bg:#FAEEDA;
+  --cold:#185FA5;--cold-bg:#E6F1FB;
+  --surface:#FFFFFF;--surface2:#F2F5F9;--surface3:#E8EDF4;
+  --ink:#111827;--ink2:#4B5563;--muted:#9CA3AF;
+  --border:#E2E8F0;--border2:rgba(255,255,255,.2);
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  --sidebar-w:260px;
+}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  transition:transform .25s cubic-bezier(.4,0,.2,1);
+  z-index:100;
+}
+.sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-brand-title{font-size:15px;font-weight:700;color:var(--primary);letter-spacing:-.01em}
+.sidebar-brand-sub{font-size:11px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace}
+.sidebar-booth-badge{
+  margin:12px 20px 0;padding:10px 12px;
+  background:var(--primary-lt);border-radius:var(--radius);
+  display:flex;align-items:center;gap:8px;
+}
+.sidebar-booth-badge .material-symbols-outlined{font-size:18px;color:var(--primary)}
+.sidebar-booth-badge-text{font-size:12px;font-weight:600;color:var(--primary)}
+.sidebar-booth-badge-dot{width:6px;height:6px;border-radius:50%;background:#22C55E;margin-left:auto;flex-shrink:0;box-shadow:0 0 0 2px rgba(34,197,94,.25)}
+.sidebar-section-label{
+  font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);padding:16px 20px 6px
+}
+.sidebar-nav{flex:1;padding:0 8px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:var(--radius);font-size:14px;color:var(--ink2);
+  cursor:pointer;transition:all .15s;border:none;background:transparent;
+  width:100%;text-align:left;
+}
+.nav-item .material-symbols-outlined{font-size:20px}
+.nav-item:hover{background:var(--surface2);color:var(--ink)}
+.nav-item.active{background:var(--primary-lt);color:var(--primary);font-weight:600}
+.nav-item.active .material-symbols-outlined{font-variation-settings:'FILL' 1,'wght' 500,'GRAD' 0,'opsz' 24}
+.nav-divider{height:1px;background:var(--border);margin:6px 8px}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.sidebar-footer-text{font-size:11px;color:var(--muted)}
+
+/* ── MAIN AREA ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:sticky;top:0;z-index:90;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  height:56px;display:flex;align-items:center;
+  padding:0 20px;gap:12px;
+}
+.topbar-hamburger{
+  display:none;width:36px;height:36px;border:1px solid var(--border);
+  border-radius:var(--radius);background:var(--surface);cursor:pointer;
+  align-items:center;justify-content:center;flex-shrink:0;
+}
+.topbar-title{font-size:15px;font-weight:600;color:var(--ink)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.topbar-stat-pill{
+  padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;
+  background:var(--primary-lt);color:var(--primary);font-family:'DM Mono',monospace;
+  display:flex;align-items:center;gap:5px;
+}
+.topbar-stat-pill .material-symbols-outlined{font-size:14px}
+
+/* ── PAGE CONTENT ── */
+.page-content{
+  flex:1;overflow-y:auto;padding:24px;
+  max-width:1200px;width:100%;margin:0 auto;
+}
+.page{display:none}
+.page.active{display:block}
+
+/* ── SECTION HEAD ── */
+.section-head{margin-bottom:20px}
+.section-head h2{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.section-head p{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* ── HERO BANNER ── */
+.hero-banner{
+  position:relative;border-radius:var(--radius-xl);overflow:hidden;
+  height:140px;margin-bottom:20px;background:linear-gradient(135deg,#004AC6,#1D9E75);
+  display:flex;align-items:flex-end;padding:20px;
+}
+.hero-banner-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,74,198,.8) 0%,rgba(29,158,117,.6) 100%)}
+.hero-banner-content{position:relative;z-index:1;color:#fff}
+.hero-banner-content h3{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.hero-banner-content p{font-size:12px;opacity:.8;margin-top:2px}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-xl);padding:20px;
+  box-shadow:var(--shadow);margin-bottom:16px;
+}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-header h4{font-size:15px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px}
+.card-header h4 .material-symbols-outlined{font-size:18px;color:var(--primary)}
+.card-tag{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--muted)}
+
+/* ── FORM FIELDS ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);margin-bottom:5px}
+.field input,.field select,.field textarea{
+  width:100%;padding:9px 12px;
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  font-size:14px;color:var(--ink);background:var(--surface);
+  outline:none;transition:border-color .15s,box-shadow .15s;
+  appearance:none;-webkit-appearance:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-mid);
+}
+.field textarea{resize:vertical;min-height:72px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* ── SOURCE CHIPS ── */
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+.chip{
+  padding:5px 14px;border:1.5px solid var(--border);border-radius:20px;
+  font-size:13px;cursor:pointer;background:transparent;color:var(--ink2);
+  transition:all .15s;
+}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip.selected{border-color:var(--primary);background:var(--primary-lt);color:var(--primary);font-weight:500}
+.chip.selected-teal{border-color:var(--teal);background:var(--teal-lt);color:var(--teal-dk);font-weight:500}
+
+/* ── FABRIC CARDS ── */
+.fabric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.fabric-card{
+  border:1.5px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 10px;text-align:center;cursor:pointer;
+  transition:all .15s;background:var(--surface);
+}
+.fabric-card:hover{border-color:var(--teal);background:var(--teal-lt)}
+.fabric-card.selected{border-color:var(--teal);background:var(--teal-lt);box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+.fc-icon{font-size:26px;margin-bottom:6px}
+.fc-name{font-size:13px;font-weight:600;color:var(--ink)}
+.fc-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── PRIORITY RADIO ── */
+.priority-row{display:flex;gap:8px;margin-top:6px}
+.priority-opt{flex:1;position:relative}
+.priority-opt input{position:absolute;opacity:0;width:0;height:0}
+.priority-opt label{
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:8px 6px;border:1.5px solid var(--border);border-radius:var(--radius);
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;
+}
+.priority-opt input:checked + label.p-hot{border-color:var(--hot);background:var(--hot-bg);color:var(--hot)}
+.priority-opt input:checked + label.p-warm{border-color:var(--warm);background:var(--warm-bg);color:var(--warm)}
+.priority-opt input:checked + label.p-cold{border-color:var(--cold);background:var(--cold-bg);color:var(--cold)}
+.priority-opt label:hover{border-color:var(--muted)}
+
+/* ── SALESPERSON FIELD ── */
+.salesperson-field{margin-top:10px;display:none}
+.salesperson-field.show{display:block}
+
+/* ── BUTTONS ── */
+.btn-primary{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  width:100%;padding:11px 20px;background:var(--primary);
+  border:none;border-radius:var(--radius-lg);color:#fff;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;
+  box-shadow:0 2px 8px rgba(0,74,198,.25);margin-top:6px;
+}
+.btn-primary:hover{background:var(--primary-dk);box-shadow:0 4px 16px rgba(0,74,198,.35)}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary .material-symbols-outlined{font-size:18px}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border:1.5px solid var(--border);border-radius:var(--radius);
+  background:var(--surface);font-size:13px;cursor:pointer;color:var(--ink2);transition:all .15s;
+}
+.btn-secondary:hover{background:var(--surface2);border-color:var(--muted)}
+.btn-ghost{padding:8px 14px;border:none;background:transparent;font-size:13px;cursor:pointer;color:var(--muted);transition:color .15s}
+.btn-ghost:hover{color:var(--ink2)}
+.btn-teal{background:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(29,158,117,.25)}
+.btn-teal:hover{background:var(--teal-dk)}
+
+/* ── SUCCESS ── */
+.success-box{text-align:center;padding:32px 16px}
+.success-icon{font-size:52px;margin-bottom:14px;display:block}
+.success-box h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.success-box p{font-size:14px;color:var(--muted);line-height:1.6}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 16px;box-shadow:var(--shadow);
+}
+.stat-label{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.stat-val{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;color:var(--ink);line-height:1}
+
+/* ── FILTER PILLS ── */
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.filter-pill{
+  padding:4px 13px;border:1.5px solid var(--border);border-radius:20px;
+  font-size:12px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--muted);
+  transition:all .15s;
+}
+.filter-pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.filter-pill:hover:not(.on){border-color:var(--muted);color:var(--ink2)}
+
+/* ── LEAD CARDS ── */
+.lead-list{display:flex;flex-direction:column;gap:8px}
+.lead-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 16px;box-shadow:var(--shadow);transition:box-shadow .15s;
+}
+.lead-card:hover{box-shadow:var(--shadow-md)}
+.lead-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.lead-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--primary-lt);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;
+}
+.lead-info{flex:1;min-width:0}
+.lead-name{font-size:14px;font-weight:600;color:var(--ink)}
+.lead-sub{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.priority-select{
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:4px 8px;font-size:11px;background:var(--surface);cursor:pointer;
+  outline:none;font-weight:600;
+}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:11px;padding:2px 9px;border-radius:10px;font-weight:600;display:inline-block}
+.badge-teal{background:var(--teal-lt);color:var(--teal-dk)}
+.badge-blue{background:var(--cold-bg);color:var(--cold)}
+.badge-amber{background:var(--warm-bg);color:var(--warm)}
+.badge-gray{background:#F1F5F9;color:#64748B}
+.badge-red{background:var(--hot-bg);color:var(--hot)}
+.badge-purple{background:#EEF2FF;color:#4338CA}
+.note-area{margin-top:10px;display:flex;gap:7px}
+.note-input{
+  flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius);
+  font-size:12px;outline:none;color:var(--ink);background:var(--surface);transition:border-color .15s;
+}
+.note-input:focus{border-color:var(--primary)}
+.note-text{font-size:12px;color:var(--muted);margin-top:6px;font-style:italic;display:flex;align-items:center;gap:4px}
+.lead-time{font-size:11px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace}
+
+/* ── BOOTH FORM ── */
+.add-btn{
+  width:100%;padding:10px;border:1.5px dashed var(--border);border-radius:var(--radius-lg);
+  background:transparent;font-size:13px;cursor:pointer;color:var(--muted);
+  margin-bottom:14px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.add-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-lt)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:14px}
+.empty .material-symbols-outlined{font-size:36px;display:block;margin-bottom:8px;opacity:.4}
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:98;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.sidebar-overlay.open{opacity:1;pointer-events:all}
+
+/* ── PASSWORD SCREEN ── */
+.pw-screen{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:24px;
+}
+.pw-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);
+  padding:28px 24px;width:100%;max-width:360px;box-shadow:var(--shadow-md);text-align:center;
+}
+.pw-box .material-symbols-outlined{font-size:40px;color:var(--primary);display:block;margin-bottom:12px}
+.pw-box h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.pw-box p{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.pw-box input{
+  width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);
+  font-size:14px;outline:none;text-align:center;letter-spacing:.1em;margin-bottom:10px;
+}
+.pw-box input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-mid)}
+.pw-error{font-size:12px;color:var(--hot);margin-bottom:10px;display:none}
+
+/* ── SPLIT LAYOUT (desktop) ── */
+.split-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* ── RECENT LEADS (sidebar column) ── */
+.recent-list{display:flex;flex-direction:column;gap:8px}
+.recent-card{
+  padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);
+  cursor:pointer;transition:all .15s;
+}
+.recent-card:hover{background:var(--surface);box-shadow:var(--shadow)}
+.recent-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.recent-avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--primary-lt);color:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+}
+.recent-name{font-size:13px;font-weight:600;color:var(--ink)}
+.recent-company{font-size:11px;color:var(--muted)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:10px}
+
+/* ════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+════════════════════════════════ */
+
+/* ── TABLET (≤1024px) ── */
+@media(max-width:1024px){
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;
+    transform:translateX(-100%);z-index:99;
+    box-shadow:var(--shadow-md);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .topbar-hamburger{display:flex}
+  .split-layout{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .hero-banner{height:120px}
+}
+
+/* ── MOBILE (≤640px) ── */
+@media(max-width:640px){
+  .page-content{padding:14px}
+  .topbar{padding:0 14px}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .fabric-grid{grid-template-columns:repeat(3,1fr)}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .hero-banner{height:100px}
+  .hero-banner-content h3{font-size:16px}
+  .card{padding:16px}
+  .section-head h2{font-size:18px}
+  .lead-sub{font-size:11px}
+}
+
+/* ── VERY SMALL (≤360px) ── */
+@media(max-width:360px){
+  .fabric-grid{grid-template-columns:1fr 1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- APP WRAPPER -->
+<div class="app">
+
+  <!-- ════════ SIDEBAR ════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-title">NYTG · Bharat Tex 2026</div>
+      <div class="sidebar-brand-sub">Lead Management App</div>
+    </div>
+
+    <!-- Booth status badge -->
+    <div class="sidebar-booth-badge" id="sidebar-booth-badge" style="display:none">
+      <span class="material-symbols-outlined">store</span>
+      <div>
+        <div class="sidebar-booth-badge-text">Booth #NYTG</div>
+        <div style="font-size:10px;color:var(--teal-dk)">Lead Sync Active</div>
+      </div>
+      <div class="sidebar-booth-badge-dot"></div>
+    </div>
+
+    <!-- Nav — always visible (public form) -->
+    <div class="sidebar-nav" style="padding-top:12px">
+      <div class="sidebar-section-label">Public</div>
+      <button class="nav-item active" id="nav-form" onclick="goTo('form')">
+        <span class="material-symbols-outlined">edit_square</span> Submit Interest
+      </button>
+
+      <!-- Admin nav (hidden until unlocked) -->
+      <div id="admin-nav" style="display:none">
+        <div class="sidebar-section-label" style="margin-top:4px">Internal</div>
+        <button class="nav-item" id="nav-dash" onclick="goTo('dash')">
+          <span class="material-symbols-outlined">dashboard</span> Dashboard
+        </button>
+        <button class="nav-item" id="nav-booth" onclick="goTo('booth')">
+          <span class="material-symbols-outlined">edit_note</span> Booth Entry
+        </button>
+        <div class="nav-divider"></div>
+        <button class="nav-item" onclick="exportCSV()">
+          <span class="material-symbols-outlined">download</span> Export CSV
+        </button>
+        <div class="nav-divider"></div>
+        <button class="nav-item" onclick="lockApp()" style="color:var(--muted)">
+          <span class="material-symbols-outlined">lock</span> Lock
+        </button>
+      </div>
+
+      <!-- Login nav -->
+      <div id="login-nav">
+        <div class="nav-divider" style="margin-top:8px"></div>
+        <button class="nav-item" onclick="goTo('login')">
+          <span class="material-symbols-outlined">admin_panel_settings</span> Team login
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-text">Global Textile Expo · Hall 5</div>
+    </div>
+  </aside>
+
+  <!-- ════════ MAIN ════════ -->
+  <div class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="topbar-hamburger" onclick="toggleSidebar()" aria-label="Menu">
+        <span class="material-symbols-outlined" style="font-size:20px">menu</span>
+      </button>
+      <div class="topbar-title" id="topbar-title">Share your fabric needs</div>
+      <div class="topbar-right">
+        <div class="topbar-stat-pill" id="topbar-leads" style="display:none">
+          <span class="material-symbols-outlined">group</span>
+          <span id="topbar-leads-count">0</span> leads
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-content">
+
+      <!-- ══════════════════════════════
+           PAGE: PUBLIC FORM
+      ══════════════════════════════ -->
+      <div id="page-form" class="page active">
+
+        <!-- Form view -->
+        <div id="form-view">
+          <div class="hero-banner">
+            <div class="hero-banner-overlay"></div>
+            <div class="hero-banner-content">
+              <h3>Share your fabric needs</h3>
+              <p>Fill in a few details — we'll send your personalised NYTG moodboard to your email.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h4><span class="material-symbols-outlined">person_add</span> Contact information</h4>
+            </div>
+            <div class="grid2">
+              <div class="field"><label>Name *</label><input id="f-name" placeholder="Your full name" autocomplete="name"></div>
+              <div class="field"><label>Company / Brand *</label><input id="f-company" placeholder="Company name" autocomplete="organization"></div>
+            </div>
+            <div class="grid2">
+              <div class="field"><label>Email *</label><input id="f-email" type="email" placeholder="work@email.com" autocomplete="email"></div>
+              <div class="field"><label>Country</label><input id="f-country" placeholder="Country" autocomplete="country-name"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h4><span class="material-symbols-outlined">sensors</span> How did you hear about us? *</h4>
+            </div>
+            <div class="chip-row">
+              <button class="chip" onclick="selectSource(this,'Facebook Ad')">Facebook Ad</button>
+              <button class="chip" onclick="selectSource(this,'Instagram')">Instagram</button>
+              <button class="chip" onclick="selectSource(this,'LinkedIn')">LinkedIn</button>
+              <button class="chip" onclick="selectSource(this,'Bharat Tex booth')">Bharat Tex booth</button>
+              <button class="chip" onclick="selectSource(this,'Other')">Other</button>
+            </div>
+            <div class="salesperson-field" id="salesperson-field">
+              <div class="field" style="margin-top:10px;margin-bottom:0">
+                <label>Sales person who assisted you</label>
+                <input id="f-salesperson" placeholder="e.g. Khun Nook">
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h4><span class="material-symbols-outlined">inventory_2</span> Fabric interest *</h4>
+            </div>
+            <div class="fabric-grid">
+              <div class="fabric-card" onclick="toggleFabric(this,'Elitech 360')">
+                <div class="fc-icon">⚡</div>
+                <div class="fc-name">Elitech 360</div>
+                <div class="fc-sub">Stretch &amp; durability</div>
+              </div>
+              <div class="fabric-card" onclick="toggleFabric(this,'Dry-Tech')">
+                <div class="fc-icon">💧</div>
+                <div class="fc-name">Dry-Tech</div>
+                <div class="fc-sub">Moisture management</div>
+              </div>
+              <div class="fabric-card" onclick="toggleFabric(this,'Recycled Fabric')">
+                <div class="fc-icon">♻️</div>
+                <div class="fc-name">Recycled Fabric</div>
+                <div class="fc-sub">Circular fashion</div>
+              </div>
+            </div>
+
+            <div style="margin-top:16px">
+              <div class="field" style="margin-bottom:6px">
+                <label>Apparel type (select all that apply)</label>
+              </div>
+              <div class="chip-row">
+                <button class="chip" onclick="toggleChip(this)">Workwear</button>
+                <button class="chip" onclick="toggleChip(this)">Uniform</button>
+                <button class="chip" onclick="toggleChip(this)">Polo shirt</button>
+                <button class="chip" onclick="toggleChip(this)">Activewear</button>
+                <button class="chip" onclick="toggleChip(this)">Casualwear</button>
+                <button class="chip" onclick="toggleChip(this)">Others</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h4><span class="material-symbols-outlined">chat_bubble</span> Message &amp; requirements</h4>
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <textarea id="f-msg" placeholder="Tell us about your project or fabric direction..."></textarea>
+            </div>
+          </div>
+
+          <button class="btn-primary btn-teal" onclick="submitPublicForm()">
+            <span class="material-symbols-outlined">send</span>
+            Submit &amp; get moodboard
+          </button>
+        </div>
+
+        <!-- Success view -->
+        <div id="success-view" style="display:none">
+          <div class="card">
+            <div class="success-box">
+              <span class="success-icon">✅</span>
+              <h3>Thank you!</h3>
+              <p>Your moodboard link will be sent to<br><strong id="conf-email"></strong><br><br>Our team may follow up for further discussion.</p>
+              <button class="btn-secondary" style="margin-top:16px" onclick="resetPublicForm()">Submit another</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════
+           PAGE: LOGIN
+      ══════════════════════════════ -->
+      <div id="page-login" class="page">
+        <div class="pw-screen" style="min-height:60vh">
+          <div class="pw-box">
+            <span class="material-symbols-outlined">admin_panel_settings</span>
+            <h3>Team access</h3>
+            <p>This area is for NYTG staff only.<br>Enter the password to continue.</p>
+            <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPassword()">
+            <div class="pw-error" id="pw-error">Incorrect password — try again</div>
+            <button class="btn-primary" onclick="checkPassword()">
+              <span class="material-symbols-outlined">login</span> Enter
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════
+           PAGE: DASHBOARD
+      ══════════════════════════════ -->
+      <div id="page-dash" class="page">
+        <div class="section-head">
+          <h2>Lead dashboard</h2>
+          <p>All leads from online form and booth entry.</p>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Total leads</div>
+            <div class="stat-val" id="st-total">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">🔥 Hot</div>
+            <div class="stat-val" id="st-hot" style="color:var(--hot)">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">🌤 Warm</div>
+            <div class="stat-val" id="st-warm" style="color:var(--warm)">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">❄️ Cold</div>
+            <div class="stat-val" id="st-cold" style="color:var(--cold)">0</div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <button class="filter-pill on" onclick="setFilter('All',this)">All</button>
+          <button class="filter-pill" onclick="setFilter('Elitech 360',this)">Elitech 360</button>
+          <button class="filter-pill" onclick="setFilter('Dry-Tech',this)">Dry-Tech</button>
+          <button class="filter-pill" onclick="setFilter('Recycled Fabric',this)">Recycled</button>
+          <button class="filter-pill" onclick="setFilter('Hot',this)">🔥 Hot</button>
+          <button class="filter-pill" onclick="setFilter('Booth',this)">Booth</button>
+          <button class="filter-pill" onclick="setFilter('Online',this)">Online</button>
+        </div>
+
+        <div id="dash-list" class="lead-list">
+          <div class="empty">
+            <span class="material-symbols-outlined">inbox</span>
+            No leads yet.
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════
+           PAGE: BOOTH ENTRY
+      ══════════════════════════════ -->
+      <div id="page-booth" class="page">
+        <div class="section-head">
+          <h2>Booth entry</h2>
+          <p>Add walk-in contacts directly from the booth.</p>
+        </div>
+
+        <!-- Split layout on desktop: form left, recent activity right -->
+        <div class="split-layout">
+
+          <!-- Left: Add form -->
+          <div>
+            <button class="add-btn" id="add-btn" onclick="toggleBoothForm()">
+              <span class="material-symbols-outlined" style="font-size:18px">add</span>
+              Add new contact
+            </button>
+
+            <div id="booth-form" style="display:none">
+              <div class="card">
+                <div class="card-header">
+                  <h4><span class="material-symbols-outlined">person_add</span> New contact</h4>
+                  <span class="card-tag">V-ID: NYTG-BT26</span>
+                </div>
+                <div class="grid2">
+                  <div class="field"><label>Name *</label><input id="b-name" placeholder="Full name" tabindex="1"></div>
+                  <div class="field"><label>Company</label><input id="b-company" placeholder="Company" tabindex="2"></div>
+                  <div class="field"><label>Email</label><input id="b-email" type="email" placeholder="Email" tabindex="3"></div>
+                  <div class="field"><label>Country</label><input id="b-country" placeholder="Country" tabindex="4"></div>
+                </div>
+                <div class="grid2">
+                  <div class="field">
+                    <label>Fabric interest</label>
+                    <select id="b-fabric" tabindex="5">
+                      <option value="">Select...</option>
+                      <option>Elitech 360</option>
+                      <option>Dry-Tech</option>
+                      <option>Recycled Fabric</option>
+                      <option>Multiple / TBD</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Sales person</label>
+                    <input id="b-sales" placeholder="Your name" tabindex="6">
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Priority</label>
+                  <div class="priority-row">
+                    <div class="priority-opt">
+                      <input type="radio" name="b-priority" id="bp-hot" value="Hot">
+                      <label for="bp-hot" class="p-hot">🔥 Hot</label>
+                    </div>
+                    <div class="priority-opt">
+                      <input type="radio" name="b-priority" id="bp-warm" value="Warm" checked>
+                      <label for="bp-warm" class="p-warm">🌤 Warm</label>
+                    </div>
+                    <div class="priority-opt">
+                      <input type="radio" name="b-priority" id="bp-cold" value="Cold">
+                      <label for="bp-cold" class="p-cold">❄️ Cold</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Note</label>
+                  <input id="b-note" placeholder="Quick note about this contact..." tabindex="7">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:4px">
+                  <button class="btn-primary" style="width:auto;padding:10px 20px;margin-top:0" onclick="saveBoothLead()" tabindex="8">
+                    <span class="material-symbols-outlined">save</span> Save contact
+                  </button>
+                  <button class="btn-ghost" onclick="toggleBoothForm()">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Recent booth leads -->
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px">
+                <span class="material-symbols-outlined" style="font-size:18px;color:var(--muted)">history</span> Recent contacts
+              </div>
+              <button class="btn-secondary" style="font-size:12px;padding:4px 12px" onclick="goTo('dash')">
+                View all <span class="material-symbols-outlined" style="font-size:14px">arrow_forward</span>
+              </button>
+            </div>
+            <div id="booth-list" class="lead-list">
+              <div class="empty">
+                <span class="material-symbols-outlined">group_add</span>
+                No contacts yet.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+/* ════════════════════════════════════
+   CONFIG
+════════════════════════════════════ */
+const ADMIN_PASSWORD = 'nytg2026';
+
+/* ════════════════════════════════════
+   STATE
+════════════════════════════════════ */
+let leads = JSON.parse(localStorage.getItem('nytg_leads') || '[]');
+let selectedFabrics = [];
+let selectedApparel = [];
+let selectedSource = '';
+let activeFilter = 'All';
+let boothFormOpen = false;
+let unlocked = false;
+
+/* ════════════════════════════════════
+   PERSIST
+════════════════════════════════════ */
+function saveLeads() {
+  localStorage.setItem('nytg_leads', JSON.stringify(leads));
+  updateTopbarCount();
+}
+function updateTopbarCount() {
+  const el = document.getElementById('topbar-leads');
+  const cnt = document.getElementById('topbar-leads-count');
+  if (unlocked) {
+    el.style.display = 'flex';
+    cnt.textContent = leads.length;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+/* ════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════ */
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('sidebar-overlay');
+  const isOpen = s.classList.contains('open');
+  if (isOpen) closeSidebar();
+  else { s.classList.add('open'); o.classList.add('open'); }
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════ */
+const pageTitles = {
+  form: 'Share your fabric needs',
+  login: 'Team login',
+  dash: 'Lead dashboard',
+  booth: 'Booth entry',
+};
+function goTo(id) {
+  closeSidebar();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item[id^="nav-"]').forEach(b => b.classList.remove('active'));
+  const navBtn = document.getElementById('nav-' + id);
+  if (navBtn) navBtn.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[id] || '';
+  if (id === 'dash') renderDash();
+  if (id === 'booth') renderBoothList();
+}
+
+/* ════════════════════════════════════
+   AUTH
+════════════════════════════════════ */
+function checkPassword() {
+  const val = document.getElementById('pw-input').value;
+  if (val === ADMIN_PASSWORD) {
+    unlocked = true;
+    document.getElementById('pw-error').style.display = 'none';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('admin-nav').style.display = 'block';
+    document.getElementById('login-nav').style.display = 'none';
+    document.getElementById('sidebar-booth-badge').style.display = 'flex';
+    updateTopbarCount();
+    goTo('dash');
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+function lockApp() {
+  unlocked = false;
+  document.getElementById('admin-nav').style.display = 'none';
+  document.getElementById('login-nav').style.display = 'block';
+  document.getElementById('sidebar-booth-badge').style.display = 'none';
+  updateTopbarCount();
+  goTo('form');
+}
+
+/* ════════════════════════════════════
+   FORM INTERACTIONS
+════════════════════════════════════ */
+function selectSource(el, name) {
+  document.querySelectorAll('.source-chip, #page-form .chip[data-source]').forEach(c => c.classList.remove('selected'));
+  // find among form chips
+  document.querySelectorAll('#page-form .chip').forEach(c => {
+    if (c.getAttribute('onclick') && c.getAttribute('onclick').includes(name)) c.classList.add('selected');
+  });
+  el.classList.add('selected');
+  selectedSource = name;
+  const sp = document.getElementById('salesperson-field');
+  if (name === 'Bharat Tex booth') sp.classList.add('show');
+  else sp.classList.remove('show');
+}
+function toggleFabric(el, name) {
+  const i = selectedFabrics.indexOf(name);
+  if (i > -1) { selectedFabrics.splice(i,1); el.classList.remove('selected'); }
+  else { selectedFabrics.push(name); el.classList.add('selected'); }
+}
+function toggleChip(el) {
+  const name = el.textContent.trim();
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    selectedApparel = selectedApparel.filter(a => a !== name);
+  } else {
+    el.classList.add('selected');
+    selectedApparel.push(name);
+  }
+}
+
+/* ════════════════════════════════════
+   PUBLIC FORM SUBMIT
+════════════════════════════════════ */
+function submitPublicForm() {
+  const name = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const company = document.getElementById('f-company').value.trim();
+  if (!name || !email || !company) { showToast('Please fill in Name, Company and Email.', 'error'); return; }
+  if (!selectedFabrics.length) { showToast('Please select at least one fabric interest.', 'error'); return; }
+  if (!selectedSource) { showToast('Please select how you heard about us.', 'error'); return; }
+
+  const salesperson = selectedSource === 'Bharat Tex booth'
+    ? document.getElementById('f-salesperson').value.trim() : '';
+
+  const lead = makeLead({
+    name, email, company,
+    country: document.getElementById('f-country').value.trim(),
+    fabric: selectedFabrics.join(', '),
+    apparel: selectedApparel.join(', '),
+    msg: document.getElementById('f-msg').value.trim(),
+    source: selectedSource,
+    salesperson,
+    priority: 'Warm',
+    note: ''
+  });
+  leads.push(lead);
+  saveLeads();
+
+  document.getElementById('conf-email').textContent = email;
+  document.getElementById('form-view').style.display = 'none';
+  document.getElementById('success-view').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function resetPublicForm() {
+  ['f-name','f-email','f-company','f-country','f-msg','f-salesperson']
+    .forEach(id => document.getElementById(id).value = '');
+  selectedFabrics = []; selectedApparel = []; selectedSource = '';
+  document.querySelectorAll('#page-form .fabric-card, #page-form .chip')
+    .forEach(c => c.classList.remove('selected'));
+  document.getElementById('salesperson-field').classList.remove('show');
+  document.getElementById('form-view').style.display = 'block';
+  document.getElementById('success-view').style.display = 'none';
+  window.scrollTo(0, 0);
+}
+
+/* ════════════════════════════════════
+   BOOTH ENTRY
+════════════════════════════════════ */
+function toggleBoothForm() {
+  boothFormOpen = !boothFormOpen;
+  document.getElementById('booth-form').style.display = boothFormOpen ? 'block' : 'none';
+  document.getElementById('add-btn').style.display = boothFormOpen ? 'none' : 'flex';
+  if (boothFormOpen) document.getElementById('b-name').focus();
+}
+
+function saveBoothLead() {
+  const name = document.getElementById('b-name').value.trim();
+  if (!name) { showToast('Name is required.', 'error'); return; }
+
+  const priorityEl = document.querySelector('input[name="b-priority"]:checked');
+  const priority = priorityEl ? priorityEl.value : 'Warm';
+
+  leads.push(makeLead({
+    name,
+    company: document.getElementById('b-company').value.trim(),
+    email: document.getElementById('b-email').value.trim(),
+    country: document.getElementById('b-country').value.trim(),
+    fabric: document.getElementById('b-fabric').value,
+    apparel: '', msg: '',
+    source: 'Booth',
+    salesperson: document.getElementById('b-sales').value.trim(),
+    priority,
+    note: document.getElementById('b-note').value.trim()
+  }));
+  saveLeads();
+
+  ['b-name','b-company','b-email','b-country','b-sales','b-note']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('b-fabric').value = '';
+  document.querySelector('input[name="b-priority"][value="Warm"]').checked = true;
+
+  boothFormOpen = false;
+  document.getElementById('booth-form').style.display = 'none';
+  document.getElementById('add-btn').style.display = 'flex';
+  renderBoothList();
+  showToast('Contact saved!', 'success');
+}
+
+/* ════════════════════════════════════
+   LEAD FACTORY
+════════════════════════════════════ */
+function makeLead(data) {
+  return { id: Date.now() + Math.random(), ...data, time: new Date().toLocaleString('en-GB') };
+}
+
+/* ════════════════════════════════════
+   INITIALS HELPER
+════════════════════════════════════ */
+function initials(name) {
+  return (name || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+}
+
+/* ════════════════════════════════════
+   RENDER DASHBOARD
+════════════════════════════════════ */
+function renderDash() {
+  document.getElementById('st-total').textContent = leads.length;
+  document.getElementById('st-hot').textContent = leads.filter(l=>l.priority==='Hot').length;
+  document.getElementById('st-warm').textContent = leads.filter(l=>l.priority==='Warm').length;
+  document.getElementById('st-cold').textContent = leads.filter(l=>l.priority==='Cold').length;
+  renderDashList();
+}
+function renderDashList() {
+  const el = document.getElementById('dash-list');
+  const filtered = leads.filter(l => {
+    if (activeFilter === 'All') return true;
+    if (['Hot','Warm','Cold'].includes(activeFilter)) return l.priority === activeFilter;
+    if (activeFilter === 'Booth') return l.source === 'Booth';
+    if (activeFilter === 'Online') return l.source !== 'Booth';
+    return l.fabric && l.fabric.includes(activeFilter);
+  }).slice().reverse();
+  el.innerHTML = filtered.length
+    ? filtered.map(leadHTML).join('')
+    : '<div class="empty"><span class="material-symbols-outlined">search_off</span>No leads match this filter.</div>';
+}
+
+/* ════════════════════════════════════
+   RENDER BOOTH LIST
+════════════════════════════════════ */
+function renderBoothList() {
+  const el = document.getElementById('booth-list');
+  const items = leads.filter(l => l.source === 'Booth').slice().reverse();
+  el.innerHTML = items.length
+    ? items.map(leadHTML).join('')
+    : '<div class="empty"><span class="material-symbols-outlined">group_add</span>No contacts yet.</div>';
+}
+
+/* ════════════════════════════════════
+   LEAD HTML CARD
+════════════════════════════════════ */
+function leadHTML(l) {
+  const fabrics = (l.fabric||'').split(', ').filter(Boolean);
+  const fabricBadges = fabrics.map(f => {
+    const cls = f==='Elitech 360'?'badge-teal':f==='Dry-Tech'?'badge-blue':f==='Recycled Fabric'?'badge-amber':'badge-gray';
+    return `<span class="badge ${cls}">${esc(f)}</span>`;
+  }).join('');
+  const pClass = l.priority==='Hot'?'badge-red':l.priority==='Warm'?'badge-amber':'badge-blue';
+  const srcClass = l.source==='Booth'?'badge-purple':'badge-gray';
+  const salesBadge = l.salesperson ? `<span class="badge badge-gray">👤 ${esc(l.salesperson)}</span>` : '';
+  const appBadge = l.apparel ? `<span class="badge badge-gray">${esc(l.apparel.split(', ')[0])}${l.apparel.split(', ').length > 1 ? ' +' + (l.apparel.split(', ').length - 1) : ''}</span>` : '';
+  return `<div class="lead-card">
+    <div class="lead-top">
+      <div style="display:flex;gap:10px;align-items:flex-start;flex:1;min-width:0">
+        <div class="lead-avatar">${initials(l.name)}</div>
+        <div class="lead-info">
+          <div class="lead-name">${esc(l.name)}</div>
+          <div class="lead-sub">${esc(l.company||'—')}${l.country?' · '+esc(l.country):''}${l.email?' · '+esc(l.email):''}</div>
+        </div>
+      </div>
+      <select class="priority-select" onchange="updatePriority('${l.id}',this.value)">
+        <option ${l.priority==='Hot'?'selected':''} value="Hot">🔥 Hot</option>
+        <option ${l.priority==='Warm'?'selected':''} value="Warm">🌤 Warm</option>
+        <option ${l.priority==='Cold'?'selected':''} value="Cold">❄️ Cold</option>
+      </select>
+    </div>
+    <div class="badges">
+      ${fabricBadges}
+      ${appBadge}
+      <span class="badge ${srcClass}">${esc(l.source)}</span>
+      <span class="badge ${pClass}">${l.priority}</span>
+      ${salesBadge}
+    </div>
+    ${l.note?`<div class="note-text"><span class="material-symbols-outlined" style="font-size:13px">edit_note</span>${esc(l.note)}</div>`:''}
+    <div class="note-area">
+      <input class="note-input" id="note-${l.id}" placeholder="Add note..." value="${esc(l.note||'')}">
+      <button class="btn-secondary" style="font-size:12px;padding:5px 12px;flex-shrink:0" onclick="saveNote('${l.id}')">Save</button>
+    </div>
+    <div class="lead-time">${l.time}</div>
+  </div>`;
+}
+
+/* ════════════════════════════════════
+   ESCAPE HTML
+════════════════════════════════════ */
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ════════════════════════════════════
+   ACTIONS
+════════════════════════════════════ */
+function updatePriority(id, val) {
+  const l = leads.find(x => String(x.id) === String(id));
+  if (l) { l.priority = val; saveLeads(); renderDash(); renderBoothList(); }
+}
+function saveNote(id) {
+  const l = leads.find(x => String(x.id) === String(id));
+  if (l) {
+    l.note = document.getElementById('note-' + id).value.trim();
+    saveLeads(); renderDash(); renderBoothList();
+    showToast('Note saved!', 'success');
+  }
+}
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderDashList();
+}
+
+/* ════════════════════════════════════
+   EXPORT CSV
+════════════════════════════════════ */
+function exportCSV() {
+  if (!leads.length) { showToast('No leads to export yet.', 'error'); return; }
+  const headers = ['Name','Company','Email','Country','Source','Salesperson','Fabric','Apparel','Message','Priority','Note','Time'];
+  const rows = leads.map(l =>
+    [l.name,l.company,l.email,l.country,l.source,l.salesperson,l.fabric,l.apparel,l.msg,l.priority,l.note,l.time]
+      .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+      .join(',')
+  );
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'NYTG_BharatTex_Leads_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  closeSidebar();
+}
+
+/* ════════════════════════════════════
+   TOAST NOTIFICATION
+════════════════════════════════════ */
+let toastTimeout;
+function showToast(msg, type = 'success') {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = `
+      position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);
+      padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;
+      box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;transition:transform .25s ease;
+      white-space:nowrap;pointer-events:none;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.background = type === 'error' ? '#E24B4A' : '#1D9E75';
+  toast.style.color = '#fff';
+  clearTimeout(toastTimeout);
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  toastTimeout = setTimeout(() => {
+    toast.style.transform = 'translateX(-50%) translateY(100px)';
+  }, 2500);
+}
+
+/* ════════════════════════════════════
+   KEYBOARD SHORTCUTS
+════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSidebar();
+  if (unlocked && e.key === 'b' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); goTo('booth'); }
+  if (unlocked && e.key === 'd' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); goTo('dash'); }
+});
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+updateTopbarCount();
+</script>
+</body>
+</html>
